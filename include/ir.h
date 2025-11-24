@@ -349,7 +349,7 @@ namespace lg::ir
             {
             public:
                 type::IRArrayType* type;
-                std::vector<IRConstant*> values;
+                std::vector<IRConstant*> elements;
                 IRArrayConstant(type::IRArrayType* type, std::vector<IRConstant*> values);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
@@ -643,18 +643,6 @@ namespace lg::ir
             static std::string kindToString(Kind kind);
         };
     }
-
-    class IRBuilder
-    {
-    private:
-        base::IRBasicBlock* insertPoint = nullptr;
-
-    public:
-        IRBuilder() = default;
-        void setInsertPoint(base::IRBasicBlock* insertPoint);
-        void createReturn();
-        void createReturn(value::IRValue* value);
-    };
 
     class IRVisitor
     {

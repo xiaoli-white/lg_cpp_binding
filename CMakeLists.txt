@@ -19,6 +19,8 @@ add_library(lg_cpp_binding SHARED
         src/ir.cpp
         include/ir.h
         include/lg-cpp-binding.h
+        include/builder.h
+        src/builder.cpp
 )
 include_directories(${ANTLR4_INCLUDE_DIR} include/)
 

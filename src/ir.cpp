@@ -364,7 +364,7 @@ namespace lg::ir
             }
 
             IRArrayConstant::IRArrayConstant(type::IRArrayType* type,
-                                             std::vector<IRConstant*> values) : type(type), values(std::move(values))
+                                             std::vector<IRConstant*> values) : type(type), elements(std::move(values))
             {
             }
 
@@ -381,10 +381,10 @@ namespace lg::ir
             std::string IRArrayConstant::toString()
             {
                 std::string result = type->toString() + " [";
-                for (int i = 0; i < values.size(); i++)
+                for (int i = 0; i < elements.size(); i++)
                 {
-                    result += values[i]->toString();
-                    if (i < values.size() - 1)result += ", ";
+                    result += elements[i]->toString();
+                    if (i < elements.size() - 1)result += ", ";
                 }
                 result += "]";
                 return result;
@@ -440,7 +440,7 @@ namespace lg::ir
                                                                 args(std::move(args)), locals(std::move(locals)),
                                                                 cfg(cfg)
         {
-            cfg->function = this;
+            if (cfg != nullptr) cfg->function = this;
         }
 
         std::any IRFunction::accept(IRVisitor* visitor, std::any additional)
@@ -861,6 +861,271 @@ namespace lg::ir
         {
             visit(global, additional);
         }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitGlobalVariable(base::IRGlobalVariable* irGlobalVariable, std::any additional)
+    {
+        visit(irGlobalVariable->type, additional);
+        return visit(irGlobalVariable->initializer, std::move(additional));
+    }
+
+    std::any IRVisitor::visitFunction(function::IRFunction* irFunction, std::any additional)
+    {
+        visit(irFunction->returnType, additional);
+        for (auto& arg : irFunction->args)
+        {
+            visit(arg, additional);
+        }
+        for (auto& local : irFunction->locals)
+        {
+            visit(local, additional);
+        }
+        if (irFunction->cfg != nullptr)
+        {
+            for (auto& block : irFunction->cfg->basicBlocks | std::views::values)
+            {
+                for (auto& instruction : block->instructions)
+                {
+                    visit(instruction, additional);
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitLocalVariable(function::IRLocalVariable* irLocalVariable, std::any additional)
+    {
+        return visit(irLocalVariable->type, std::move(additional));
+    }
+
+    std::any IRVisitor::visitStructure(structure::IRStructure* irStructure, std::any additional)
+    {
+        for (auto& field : irStructure->fields)
+        {
+            visit(field, additional);
+        }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitField(structure::IRField* irField, std::any additional)
+    {
+        return visit(irField->type, std::move(additional));
+    }
+
+    std::any IRVisitor::visitIntegerType(type::IRIntegerType* irIntegerType, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitFloatType(type::IRFloatType* irFloatType, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitDoubleType(type::IRDoubleType* irDoubleType, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitStructureType(type::IRStructureType* irStructureType, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitArrayType(type::IRArrayType* irArrayType, std::any additional)
+    {
+        return visit(irArrayType->base, std::move(additional));
+    }
+
+    std::any IRVisitor::visitPointerType(type::IRPointerType* irPointerType, std::any additional)
+    {
+        return visit(irPointerType->base, std::move(additional));
+    }
+
+    std::any IRVisitor::visitVoidType(type::IRVoidType* irVoidType, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitRegister(value::IRRegister* irRegister, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitFunctionReference(value::IRFunctionReference* irFunctionReference, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitGlobalVariableReference(value::IRGlobalVariableReference* irGlobalVariableReference,
+                                                     std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitLocalVariableReference(value::IRLocalVariableReference* irLocalVariableReference,
+                                                    std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitIntegerConstant(value::constant::IRIntegerConstant* irIntegerConstant, std::any additional)
+    {
+        return visit(irIntegerConstant->type, std::move(additional));
+    }
+
+    std::any IRVisitor::visitFloatConstant(value::constant::IRFloatConstant* irFloatConstant, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitDoubleConstant(value::constant::IRDoubleConstant* irDoubleConstant, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitArrayConstant(value::constant::IRArrayConstant* irArrayConstant, std::any additional)
+    {
+        visit(irArrayConstant->type, additional);
+        for (auto& element : irArrayConstant->elements)
+        {
+            visit(element, additional);
+        }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitStringConstant(value::constant::IRStringConstant* irStringConstant, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitNullptrConstant(value::constant::IRNullptrConstant* irNullptrConstant, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitAssembly(instruction::IRAssembly* irAssembly, std::any additional)
+    {
+        for (auto& operand : irAssembly->operands)
+        {
+            visit(operand, additional);
+        }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitBinaryOperates(instruction::IRBinaryOperates* irBinaryOperates, std::any additional)
+    {
+        visit(irBinaryOperates->operand1, additional);
+        visit(irBinaryOperates->operand2, additional);
+        visit(irBinaryOperates->target, std::move(additional));
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitUnaryOperates(instruction::IRUnaryOperates* irUnaryOperates, std::any additional)
+    {
+        visit(irUnaryOperates->operand, additional);
+        visit(irUnaryOperates->target, std::move(additional));
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitGetElementPointer(instruction::IRGetElementPointer* irGetElementPointer,
+                                               std::any additional)
+    {
+        visit(irGetElementPointer->pointer, additional);
+        for (auto& index : irGetElementPointer->indices)
+        {
+            visit(index, additional);
+        }
+        visit(irGetElementPointer->target, std::move(additional));
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitCompare(instruction::IRCompare* irCompare, std::any additional)
+    {
+        visit(irCompare->operand1, additional);
+        visit(irCompare->operand2, additional);
+        visit(irCompare->target, std::move(additional));
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitConditionalJump(instruction::IRConditionalJump* irConditionalJump, std::any additional)
+    {
+        visit(irConditionalJump->operand1, additional);
+        if (irConditionalJump->operand2 != nullptr)
+        {
+            visit(irConditionalJump->operand2, std::move(additional));
+        }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitGoto(instruction::IRGoto* irGoto, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitInvoke(instruction::IRInvoke* irInvoke, std::any additional)
+    {
+        visit(irInvoke->returnType, additional);
+        visit(irInvoke->func, additional);
+        for (auto& arg : irInvoke->arguments)
+        {
+            visit(arg, additional);
+        }
+        if (irInvoke->target != nullptr)
+        {
+            visit(irInvoke->target, std::move(additional));
+        }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitReturn(instruction::IRReturn* irReturn, std::any additional)
+    {
+        if (irReturn->value != nullptr)
+        {
+            visit(irReturn->value, std::move(additional));
+        }
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitLoad(instruction::IRLoad* irLoad, std::any additional)
+    {
+        visit(irLoad->ptr, additional);
+        visit(irLoad->target, std::move(additional));
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitStore(instruction::IRStore* irStore, std::any additional)
+    {
+        visit(irStore->ptr, std::move(additional));
+        visit(irStore->value, additional);
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitNop(instruction::IRNop* irNop, std::any additional)
+    {
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitSetRegister(instruction::IRSetRegister* irSetRegister, std::any additional)
+    {
+        visit(irSetRegister->value, std::move(additional));
+        visit(irSetRegister->target, std::move(additional));
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitStackAllocate(instruction::IRStackAllocate* irStackAllocate, std::any additional)
+    {
+        visit(irStackAllocate->size, additional);
+        visit(irStackAllocate->target, std::move(additional));
+        return nullptr;
+    }
+
+    std::any IRVisitor::visitTypeCast(instruction::IRTypeCast* irTypeCast, std::any additional)
+    {
+        visit(irTypeCast->source, additional);
+        visit(irTypeCast->targetType, additional);
+        visit(irTypeCast->target, std::move(additional));
         return nullptr;
     }
 
