@@ -73,7 +73,7 @@ namespace lg::ir
         void createAsm(std::string assembly, std::string constraints, std::vector<value::IRValue*> args);
 
     private:
-        std::string allocateRegisterName();
+        [[nodiscard]] std::string allocateRegisterName() const;
     };
 }
 

@@ -32,6 +32,16 @@ namespace lg::ir
         {
         }
 
+        std::string IRBasicBlock::toString()
+        {
+            return "";
+        }
+
+        void IRBasicBlock::addInstruction(instruction::IRInstruction* instruction)
+        {
+            instructions.push_back(instruction);
+        }
+
         std::string conditionToString(IRCondition condition)
         {
             switch (condition)
@@ -173,6 +183,11 @@ namespace lg::ir
             return "structure " + structure->name;
         }
 
+        IRStructureType* IRStructureType::get(structure::IRStructure* structure)
+        {
+            return new IRStructureType(structure);
+        }
+
         IRArrayType::IRArrayType(IRType* base, uint64_t size) : base(base), size(size)
         {
         }
@@ -185,6 +200,11 @@ namespace lg::ir
         std::string IRArrayType::toString()
         {
             return "[" + std::to_string(size) + " x " + base->toString() + "]";
+        }
+
+        IRArrayType* IRArrayType::get(IRType* base, uint64_t size)
+        {
+            return new IRArrayType(base, size);
         }
 
         IRPointerType::IRPointerType(IRType* base) : base(base)
@@ -226,7 +246,7 @@ namespace lg::ir
 
     namespace value
     {
-        IRRegister::IRRegister(type::IRType* type, std::string name) : type(type), name(std::move(name))
+        IRRegister::IRRegister(std::string name) : name(std::move(name))
         {
         }
 
@@ -266,7 +286,7 @@ namespace lg::ir
 
         IRGlobalVariableReference::IRGlobalVariableReference(base::IRGlobalVariable* variable) : variable(variable)
         {
-            type = new type::IRPointerType(variable->type);
+            type = type::IRPointerType::get(variable->type);
         }
 
         type::IRType* IRGlobalVariableReference::getType()
@@ -286,7 +306,7 @@ namespace lg::ir
 
         IRLocalVariableReference::IRLocalVariableReference(function::IRLocalVariable* variable) : variable(variable)
         {
-            type = new type::IRPointerType(variable->type);
+            type = type::IRPointerType::get(variable->type);
         }
 
         type::IRType* IRLocalVariableReference::getType()
@@ -392,7 +412,7 @@ namespace lg::ir
 
             IRStringConstant::IRStringConstant(std::string value) : value(std::move(value))
             {
-                type = new type::IRPointerType(type::IRIntegerType::getUnsignedInt32Type());
+                type = type::IRPointerType::get(type::IRIntegerType::getUnsignedInt32Type());
             }
 
             type::IRType* IRStringConstant::getType()
@@ -608,6 +628,32 @@ namespace lg::ir
             }
         }
 
+        IRGetElementPointer::IRGetElementPointer(value::IRValue* pointer,
+                                                 std::vector<value::constant::IRIntegerConstant*> indices,
+                                                 value::IRRegister* target) : pointer(pointer),
+                                                                              indices(std::move(indices)),
+                                                                              target(target)
+        {
+            target->def = this;
+            type::IRType* ty = pointer->getType();
+            for (auto& index : indices)
+            {
+                if (auto pointerType = dynamic_cast<type::IRPointerType*>(ty))
+                {
+                    ty = pointerType->base;
+                }
+                else if (auto arrayType = dynamic_cast<type::IRArrayType*>(ty))
+                {
+                    ty = arrayType->base;
+                }
+                else if (auto structureType = dynamic_cast<type::IRStructureType*>(ty))
+                {
+                    ty = structureType->structure->fields[index->value]->type;
+                }
+            }
+            target->type = type::IRPointerType::get(ty);
+        }
+
         std::any IRGetElementPointer::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitGetElementPointer(this, std::move(additional));
@@ -640,6 +686,12 @@ namespace lg::ir
         {
             return "%" + target->name + " = cmp " + conditionToString(condition) + ", " + operand1->toString() + ", " +
                 operand2->toString();
+        }
+
+        IRConditionalJump::IRConditionalJump(base::IRCondition condition, value::IRValue* operand,
+                                             base::IRBasicBlock* target) : condition(condition), operand1(operand),
+                                                                           operand2(nullptr), target(target)
+        {
         }
 
         IRConditionalJump::IRConditionalJump(base::IRCondition condition, value::IRValue* operand1,
@@ -708,6 +760,10 @@ namespace lg::ir
             }
             result += ")";
             return result;
+        }
+
+        IRReturn::IRReturn() : value(nullptr)
+        {
         }
 
         IRReturn::IRReturn(value::IRValue* value) : value(value)
@@ -832,6 +888,8 @@ namespace lg::ir
                 return "itop";
             case Kind::PTOI:
                 return "ptoi";
+            case Kind::PTOP:
+                return "ptop";
             case Kind::FEXT:
                 return "fext";
             case Kind::FTRUNC:

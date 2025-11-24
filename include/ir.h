@@ -8,9 +8,7 @@
 #include <any>
 #include <cstdint>
 #include <map>
-#include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "ir.h"
@@ -130,11 +128,13 @@ namespace lg::ir
         class IRBasicBlock final
         {
         public:
-            IRBasicBlock* cfg = nullptr;
+            IRControlFlowGraph* cfg = nullptr;
             std::string name;
             std::vector<instruction::IRInstruction*> instructions;
             explicit IRBasicBlock(std::string name);
             std::string toString();
+
+            void addInstruction(instruction::IRInstruction* instruction);
         };
 
         enum class IRCondition
@@ -170,9 +170,12 @@ namespace lg::ir
                 EightBytes = 64
             };
 
+        private:
+            IRIntegerType(Size size, bool _unsigned);
+
+        public:
             Size size;
             bool _unsigned;
-            IRIntegerType(Size size, bool _unsigned);
 
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
@@ -215,28 +218,35 @@ namespace lg::ir
 
         class IRStructureType final : public IRType
         {
+        private:
+            explicit IRStructureType(structure::IRStructure* structure);
+
         public:
             structure::IRStructure* structure;
-            explicit IRStructureType(structure::IRStructure* structure);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            static IRStructureType* get(structure::IRStructure* structure);
         };
 
         class IRArrayType final : public IRType
         {
+        private:
+            IRArrayType(IRType* base, uint64_t size);
         public:
             IRType* base;
             uint64_t size;
-            IRArrayType(IRType* base, uint64_t size);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            static IRArrayType* get(IRType* base, uint64_t size);
         };
 
         class IRPointerType final : public IRType
         {
+        private:
+            explicit IRPointerType(IRType* base);
+
         public:
             IRType* base;
-            explicit IRPointerType(IRType* base);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
 
@@ -268,9 +278,9 @@ namespace lg::ir
         {
         public:
             instruction::IRInstruction* def = nullptr;
-            type::IRType* type;
+            type::IRType* type = nullptr;
             std::string name;
-            IRRegister(type::IRType* type, std::string name);
+            explicit IRRegister(std::string name);
             type::IRType* getType() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
@@ -390,6 +400,7 @@ namespace lg::ir
             std::vector<IRLocalVariable*> args;
             std::vector<IRLocalVariable*> locals;
             base::IRControlFlowGraph* cfg;
+            uint64_t registerCount = 0;
             IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
                        std::vector<IRLocalVariable*> args, std::vector<IRLocalVariable*> locals,
                        base::IRControlFlowGraph* cfg);
@@ -502,9 +513,9 @@ namespace lg::ir
         {
         public:
             value::IRValue* pointer;
-            std::vector<value::IRValue*> indices;
+            std::vector<value::constant::IRIntegerConstant*> indices;
             value::IRRegister* target;
-            IRGetElementPointer(value::IRValue* pointer, std::vector<value::IRValue*> indices,
+            IRGetElementPointer(value::IRValue* pointer, std::vector<value::constant::IRIntegerConstant*> indices,
                                 value::IRRegister* target);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
@@ -530,6 +541,7 @@ namespace lg::ir
             value::IRValue* operand1;
             value::IRValue* operand2;
             base::IRBasicBlock* target;
+            IRConditionalJump(base::IRCondition condition, value::IRValue* operand, base::IRBasicBlock* target);
             IRConditionalJump(base::IRCondition condition, value::IRValue* operand1, value::IRValue* operand2,
                               base::IRBasicBlock* target);
             std::any accept(IRVisitor* visitor, std::any additional) override;
@@ -563,6 +575,7 @@ namespace lg::ir
         {
         public:
             value::IRValue* value;
+            IRReturn();
             explicit IRReturn(value::IRValue* value);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
@@ -628,6 +641,7 @@ namespace lg::ir
                 ITOF,
                 ITOP,
                 PTOI,
+                PTOP,
                 FEXT,
                 FTRUNC
             };
