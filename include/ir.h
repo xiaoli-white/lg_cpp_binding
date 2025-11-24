@@ -8,6 +8,7 @@
 #include <any>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -58,6 +59,7 @@ namespace lg::ir
             class IRDoubleConstant;
             class IRArrayConstant;
             class IRStringConstant;
+            class IRNullptrConstant;
         }
     }
 
@@ -109,6 +111,8 @@ namespace lg::ir
             type::IRType* type;
             std::string name;
             value::constant::IRConstant* initializer = nullptr;
+            IRGlobalVariable(type::IRType* type, std::string name,
+                             value::constant::IRConstant* initializer);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -129,12 +133,7 @@ namespace lg::ir
             IRBasicBlock* cfg = nullptr;
             std::string name;
             std::vector<instruction::IRInstruction*> instructions;
-
-            IRBasicBlock(std::string name, std::vector<instruction::IRInstruction*> instructions) :
-                name(std::move(name)), instructions(std::move(instructions))
-            {
-            }
-
+            explicit IRBasicBlock(std::string name);
             std::string toString();
         };
 
@@ -177,20 +176,39 @@ namespace lg::ir
 
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+
+            static IRIntegerType* getUnsignedInt8Type();
+            static IRIntegerType* getInt8Type();
+            static IRIntegerType* getUnsignedInt16Type();
+            static IRIntegerType* getInt16Type();
+            static IRIntegerType* getUnsignedInt32Type();
+            static IRIntegerType* getInt32Type();
+            static IRIntegerType* getUnsignedInt64Type();
+            static IRIntegerType* getInt64Type();
+            static IRIntegerType* getCharType();
+            static IRIntegerType* getBooleanType();
         };
 
         class IRFloatType final : public IRType
         {
+        private:
+            IRFloatType() = default;
         public:
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+
+            static IRFloatType* get();
         };
 
         class IRDoubleType final : public IRType
         {
+        private:
+            IRDoubleType() = default;
         public:
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+
+            static  IRDoubleType* get();
         };
 
         class IRStructureType final : public IRType
@@ -223,9 +241,13 @@ namespace lg::ir
 
         class IRVoidType : public IRType
         {
+        private:
+            IRVoidType() = default;
         public:
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+
+            static  IRVoidType* get();
         };
     }
 
@@ -240,7 +262,7 @@ namespace lg::ir
         class IRRegister final : public IRValue
         {
         public:
-            instruction::IRInstruction* def;
+           instruction::IRInstruction* def = nullptr;
             type::IRType* type;
             std::string name;
             IRRegister(type::IRType* type, std::string name);
@@ -335,6 +357,16 @@ namespace lg::ir
                 type::IRType* type;
                 std::string value;
                 explicit IRStringConstant(std::string value);
+                type::IRType* getType() override;
+                std::any accept(IRVisitor* visitor, std::any additional) override;
+                std::string toString() override;
+            };
+
+            class IRNullptrConstant final : public IRConstant
+            {
+            public:
+                type::IRPointerType* type;
+                explicit IRNullptrConstant(type::IRPointerType* type);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
@@ -440,6 +472,7 @@ namespace lg::ir
             std::string toString() override;
             static std::string operatorToString(Operator op);
         };
+
         class IRUnaryOperates final : public IRInstruction
         {
         public:
@@ -459,16 +492,19 @@ namespace lg::ir
             std::string toString() override;
             static std::string operatorToString(Operator op);
         };
+
         class IRGetElementPointer final : public IRInstruction
         {
         public:
             value::IRValue* pointer;
             std::vector<value::IRValue*> indices;
             value::IRRegister* target;
-            IRGetElementPointer(value::IRValue* pointer, std::vector<value::IRValue*> indices,value::IRRegister* target);
+            IRGetElementPointer(value::IRValue* pointer, std::vector<value::IRValue*> indices,
+                                value::IRRegister* target);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRCompare final : public IRInstruction
         {
         public:
@@ -476,10 +512,12 @@ namespace lg::ir
             value::IRValue* operand1;
             value::IRValue* operand2;
             value::IRRegister* target;
-            IRCompare(base::IRCondition condition, value::IRValue* operand1, value::IRValue* operand2,value::IRRegister* target);
+            IRCompare(base::IRCondition condition, value::IRValue* operand1, value::IRValue* operand2,
+                      value::IRRegister* target);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRConditionalJump final : public IRInstruction
         {
         public:
@@ -487,10 +525,12 @@ namespace lg::ir
             value::IRValue* operand1;
             value::IRValue* operand2;
             base::IRBasicBlock* target;
-            IRConditionalJump(base::IRCondition condition, value::IRValue* operand1, value::IRValue* operand2,base::IRBasicBlock* target);
+            IRConditionalJump(base::IRCondition condition, value::IRValue* operand1, value::IRValue* operand2,
+                              base::IRBasicBlock* target);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRGoto final : public IRInstruction
         {
         public:
@@ -499,6 +539,7 @@ namespace lg::ir
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRInvoke final : public IRInstruction
         {
         public:
@@ -506,10 +547,13 @@ namespace lg::ir
             value::IRValue* func;
             std::vector<value::IRValue*> arguments;
             value::IRRegister* target;
-            IRInvoke(type::IRType* returnType, value::IRValue* func, std::vector<value::IRValue*> arguments,value::IRRegister* target);
+            IRInvoke(type::IRType* returnType, value::IRValue* func,
+                     std::vector<value::IRValue*> arguments,
+                     value::IRRegister* target);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRReturn final : public IRInstruction
         {
         public:
@@ -518,6 +562,7 @@ namespace lg::ir
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRLoad final : public IRInstruction
         {
         public:
@@ -527,6 +572,7 @@ namespace lg::ir
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRStore final : public IRInstruction
         {
         public:
@@ -536,6 +582,7 @@ namespace lg::ir
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRNop final : public IRInstruction
         {
         public:
@@ -543,6 +590,7 @@ namespace lg::ir
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRSetRegister final : public IRInstruction
         {
         public:
@@ -552,6 +600,7 @@ namespace lg::ir
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRStackAllocate final : public IRInstruction
         {
         public:
@@ -561,6 +610,7 @@ namespace lg::ir
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
+
         class IRTypeCast final : public IRInstruction
         {
         public:
@@ -581,12 +631,24 @@ namespace lg::ir
             value::IRValue* source;
             type::IRType* targetType;
             value::IRRegister* target;
-            IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType,value::IRRegister* target);
+            IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType,
+                       value::IRRegister* target);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             static std::string kindToString(Kind kind);
         };
     }
+
+    class IRBuilder
+    {
+    private:
+        base::IRBasicBlock* insertPoint;
+
+    public:
+        void setInsertPoint(base::IRBasicBlock* insertPoint);
+        void createReturn();
+        void createReturn(value::IRValue* value);
+    };
 
     class IRVisitor
     {
@@ -597,6 +659,45 @@ namespace lg::ir
         virtual std::any visitGlobalVariable(base::IRGlobalVariable* irGlobalVariable, std::any additional);
         virtual std::any visitFunction(function::IRFunction* irFunction, std::any additional);
         virtual std::any visitLocalVariable(function::IRLocalVariable* irLocalVariable, std::any additional);
+        virtual std::any visitStructure(structure::IRStructure* irStructure, std::any additional);
+        virtual std::any visitField(structure::IRField* irField, std::any additional);
+        virtual std::any visitIntegerType(type::IRIntegerType* irIntegerType, std::any additional);
+        virtual std::any visitFloatType(type::IRFloatType* irFloatType, std::any additional);
+        virtual std::any visitDoubleType(type::IRDoubleType* irDoubleType, std::any additional);
+        virtual std::any visitStructureType(type::IRStructureType* irStructureType, std::any additional);
+        virtual std::any visitArrayType(type::IRArrayType* irArrayType, std::any additional);
+        virtual std::any visitPointerType(type::IRPointerType* irPointerType, std::any additional);
+        virtual std::any visitVoidType(type::IRVoidType* irVoidType, std::any additional);
+        virtual std::any visitRegister(value::IRRegister* irRegister, std::any additional);
+        virtual std::any visitFunctionReference(value::IRFunctionReference* irFunctionReference, std::any additional);
+        virtual std::any visitGlobalVariableReference(value::IRGlobalVariableReference* irGlobalVariableReference,
+                                                      std::any additional);
+        virtual std::any visitLocalVariableReference(value::IRLocalVariableReference* irLocalVariableReference,
+                                                     std::any additional);
+        virtual std::any visitIntegerConstant(value::constant::IRIntegerConstant* irIntegerConstant,
+                                              std::any additional);
+        virtual std::any visitFloatConstant(value::constant::IRFloatConstant* irFloatConstant, std::any additional);
+        virtual std::any visitDoubleConstant(value::constant::IRDoubleConstant* irDoubleConstant, std::any additional);
+        virtual std::any visitArrayConstant(value::constant::IRArrayConstant* irArrayConstant, std::any additional);
+        virtual std::any visitStringConstant(value::constant::IRStringConstant* irStringConstant, std::any additional);
+        virtual std::any visitNullptrConstant(value::constant::IRNullptrConstant* irNullptrConstant,
+                                              std::any additional);
+        virtual std::any visitAssembly(instruction::IRAssembly* irAssembly, std::any additional);
+        virtual std::any visitBinaryOperates(instruction::IRBinaryOperates* irBinaryOperates, std::any additional);
+        virtual std::any visitUnaryOperates(instruction::IRUnaryOperates* irUnaryOperates, std::any additional);
+        virtual std::any visitGetElementPointer(instruction::IRGetElementPointer* irGetElementPointer,
+                                                std::any additional);
+        virtual std::any visitCompare(instruction::IRCompare* irCompare, std::any additional);
+        virtual std::any visitConditionalJump(instruction::IRConditionalJump* irConditionalJump, std::any additional);
+        virtual std::any visitGoto(instruction::IRGoto* irGoto, std::any additional);
+        virtual std::any visitInvoke(instruction::IRInvoke* irInvoke, std::any additional);
+        virtual std::any visitReturn(instruction::IRReturn* irReturn, std::any additional);
+        virtual std::any visitLoad(instruction::IRLoad* irLoad, std::any additional);
+        virtual std::any visitStore(instruction::IRStore* irStore, std::any additional);
+        virtual std::any visitNop(instruction::IRNop* irNop, std::any additional);
+        virtual std::any visitSetRegister(instruction::IRSetRegister* irSetRegister, std::any additional);
+        virtual std::any visitStackAllocate(instruction::IRStackAllocate* irStackAllocate, std::any additional);
+        virtual std::any visitTypeCast(instruction::IRTypeCast* irTypeCast, std::any additional);
     };
 
     class IRModule : public base::IRNode
