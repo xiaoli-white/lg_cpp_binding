@@ -5,7 +5,7 @@
 
 
 #include "antlr4-runtime.h"
-#include "../../LGIRGrammarVisitor.h"
+#include "lexer/LGIRGrammarVisitor.h"
 
 
 /**
@@ -14,6 +14,7 @@
  */
 class  LGIRGrammarBaseVisitor : public LGIRGrammarVisitor {
 public:
+  virtual ~LGIRGrammarBaseVisitor() = default;
 
   virtual std::any visitProgram(LGIRGrammarParser::ProgramContext *ctx) override {
     return visitChildren(ctx);

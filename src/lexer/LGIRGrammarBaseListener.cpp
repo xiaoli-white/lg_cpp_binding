@@ -2,6 +2,6 @@
 // Generated from LGIRGrammar.g4 by ANTLR 4.13.2
 
 
-#include "../../LGIRGrammarBaseListener.h"
+#include "lexer/LGIRGrammarBaseListener.h"
 
 
