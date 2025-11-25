@@ -42,4 +42,4 @@ namespace lg::ir::parser
     IRModule* parse(antlr4::ANTLRInputStream& stream);
 }
 
-#endif //LG_CPP_BINDING_PARSER_H
+#endif //LG_CPP_BINDING_IRPARSER_H

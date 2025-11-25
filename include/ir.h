@@ -728,4 +728,4 @@ namespace lg::ir
     };
 }
 
-#endif //LG_CPP_BINDING_LG_CPP_BINDING_H
+#endif //LG_CPP_BINDING_IR_H
