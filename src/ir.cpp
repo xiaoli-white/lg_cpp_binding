@@ -76,6 +76,11 @@ namespace lg::ir
 
     namespace type
     {
+        bool IRType::operator!=(const IRType& other)
+        {
+            return !(*this == other);
+        }
+
         IRIntegerType::IRIntegerType(Size size, bool _unsigned) : size(size), _unsigned(_unsigned)
         {
         }
@@ -89,6 +94,14 @@ namespace lg::ir
         {
             return (_unsigned ? "u" : "i") + std::to_string(static_cast<uint8_t>(size));
         }
+
+        bool IRIntegerType::operator==(const IRType& other)
+        {
+            if (auto* o = dynamic_cast<const IRIntegerType*>(&other))
+                return size == o->size && _unsigned == o->_unsigned;
+            return false;
+        }
+
 
         IRIntegerType* IRIntegerType::getUnsignedInt8Type()
         {
@@ -156,6 +169,11 @@ namespace lg::ir
 
         std::string IRFloatType::toString() { return "float"; }
 
+        bool IRFloatType::operator==(const IRType& other)
+        {
+            return dynamic_cast<const IRFloatType*>(&other) != nullptr;
+        }
+
         IRFloatType* IRFloatType::get()
         {
             static IRFloatType instance;
@@ -168,6 +186,11 @@ namespace lg::ir
         }
 
         std::string IRDoubleType::toString() { return "double"; }
+
+        bool IRDoubleType::operator==(const IRType& other)
+        {
+            return dynamic_cast<const IRDoubleType*>(&other) != nullptr;
+        }
 
         IRDoubleType* IRDoubleType::get()
         {
@@ -189,6 +212,13 @@ namespace lg::ir
             return "structure " + structure->name;
         }
 
+        bool IRStructureType::operator==(const IRType& other)
+        {
+            if (auto* o = dynamic_cast<const IRStructureType*>(&other))
+                return structure == o->structure;
+            return false;
+        }
+
         IRStructureType* IRStructureType::get(structure::IRStructure* structure)
         {
             return new IRStructureType(structure);
@@ -206,6 +236,13 @@ namespace lg::ir
         std::string IRArrayType::toString()
         {
             return "[" + std::to_string(size) + " x " + base->toString() + "]";
+        }
+
+        bool IRArrayType::operator==(const IRType& other)
+        {
+            if (auto* o = dynamic_cast<const IRArrayType*>(&other))
+                return base == o->base && size == o->size;
+            return false;
         }
 
         IRArrayType* IRArrayType::get(IRType* base, uint64_t size)
@@ -227,11 +264,17 @@ namespace lg::ir
             return base->toString() + "*";
         }
 
+        bool IRPointerType::operator==(const IRType& other)
+        {
+            if (auto* o = dynamic_cast<const IRPointerType*>(&other))
+                return base == o->base;
+            return false;
+        }
+
         IRPointerType* IRPointerType::get(IRType* base)
         {
             return new IRPointerType(base);
         }
-
 
         std::any IRVoidType::accept(IRVisitor* visitor, std::any additional)
         {
@@ -242,6 +285,12 @@ namespace lg::ir
         {
             return "void";
         }
+
+        bool IRVoidType::operator==(const IRType& other)
+        {
+            return dynamic_cast<const IRVoidType*>(&other) != nullptr;
+        }
+
 
         IRVoidType* IRVoidType::get()
         {

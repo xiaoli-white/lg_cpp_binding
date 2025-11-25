@@ -189,7 +189,11 @@ namespace lg::ir::parser
     {
         auto* reg = name2Register[getTargetRegisterName(context->registerName())];
         visit(context->type());
-        reg->type = std::any_cast<type::IRType*>(stack.top());
+        auto* type = std::any_cast<type::IRType*>(stack.top());
+        if (*(reg->getType()) != *type)
+        {
+            throw std::runtime_error("register type mismatch");
+        }
         stack.pop();
         stack.emplace(std::make_any<value::IRValue*>(reg));
         return nullptr;

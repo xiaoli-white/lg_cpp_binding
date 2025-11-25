@@ -156,6 +156,9 @@ namespace lg::ir
     {
         class IRType : public base::IRNode
         {
+        public:
+            virtual bool operator==(const IRType& other) = 0;
+            virtual bool operator!=(const IRType& other);
         };
 
         class IRIntegerType final : public IRType
@@ -179,6 +182,7 @@ namespace lg::ir
 
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            bool operator==(const IRType& other) override;
 
             static IRIntegerType* getUnsignedInt8Type();
             static IRIntegerType* getInt8Type();
@@ -200,6 +204,7 @@ namespace lg::ir
         public:
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            bool operator==(const IRType& other) override;
 
             static IRFloatType* get();
         };
@@ -212,6 +217,7 @@ namespace lg::ir
         public:
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            bool operator==(const IRType& other) override;
 
             static IRDoubleType* get();
         };
@@ -225,6 +231,8 @@ namespace lg::ir
             structure::IRStructure* structure;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            bool operator==(const IRType& other) override;
+
             static IRStructureType* get(structure::IRStructure* structure);
         };
 
@@ -238,6 +246,8 @@ namespace lg::ir
             uint64_t size;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            bool operator==(const IRType& other) override;
+
             static IRArrayType* get(IRType* base, uint64_t size);
         };
 
@@ -250,6 +260,7 @@ namespace lg::ir
             IRType* base;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            bool operator==(const IRType& other) override;
 
             static IRPointerType* get(IRType* base);
         };
@@ -262,6 +273,7 @@ namespace lg::ir
         public:
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            bool operator==(const IRType& other) override;
 
             static IRVoidType* get();
         };
