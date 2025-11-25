@@ -12,7 +12,7 @@ namespace lg::ir
 {
     class IRDumper;
 
-    class IRDumper: public IRVisitor
+    class IRDumper final : public IRVisitor
     {
     private:
         std::ostream& out;

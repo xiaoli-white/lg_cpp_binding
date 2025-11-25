@@ -3,9 +3,6 @@ project(lg_cpp_binding)
 
 set(CMAKE_CXX_STANDARD 20)
 
-find_path(ANTLR4_INCLUDE_DIR antlr4-runtime.h
-        PATHS ${CMAKE_PREFIX_PATH} NO_DEFAULT_PATH)
-
 find_package(antlr4-runtime REQUIRED)
 
 include_directories(${ANTLR4_INCLUDE_DIR} include/)

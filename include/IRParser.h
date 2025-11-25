@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#ifndef LG_CPP_BINDING_PARSER_H
-#define LG_CPP_BINDING_PARSER_H
+#ifndef LG_CPP_BINDING_IRPARSER_H
+#define LG_CPP_BINDING_IRPARSER_H
 
 #include <ir.h>
 #include <builder.h>

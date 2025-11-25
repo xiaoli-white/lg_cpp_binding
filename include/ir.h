@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#ifndef LG_CPP_BINDING_LG_CPP_BINDING_H
-#define LG_CPP_BINDING_LG_CPP_BINDING_H
+#ifndef LG_CPP_BINDING_IR_H
+#define LG_CPP_BINDING_IR_H
 #include <any>
 #include <cstdint>
 #include <map>
