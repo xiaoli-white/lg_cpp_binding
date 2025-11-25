@@ -130,7 +130,7 @@ namespace lg::ir
         public:
             IRControlFlowGraph* cfg = nullptr;
             std::string name;
-            std::vector<instruction::IRInstruction*> instructions;
+            std::vector<instruction::IRInstruction*> instructions{};
             explicit IRBasicBlock(std::string name);
             std::string toString();
 
@@ -409,6 +409,7 @@ namespace lg::ir
             std::string toString() override;
 
             void addBasicBlock(base::IRBasicBlock* basicBlock) const;
+            base::IRBasicBlock* getBasicBlock(const std::string& name) const;
         };
 
         class IRLocalVariable final : public base::IRNode
@@ -725,6 +726,7 @@ namespace lg::ir
         void putGlobalVariable(base::IRGlobalVariable* globalVariable);
         void putStructure(structure::IRStructure* structure);
         void putFunction(function::IRFunction* function);
+        function::IRFunction* getFunction(const std::string& name);
     };
 }
 

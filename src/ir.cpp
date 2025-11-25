@@ -484,6 +484,10 @@ namespace lg::ir
             cfg->addBasicBlock(basicBlock);
         }
 
+        base::IRBasicBlock* IRFunction::getBasicBlock(const std::string& name) const
+        {
+            return cfg->basicBlocks[name];
+        }
 
         IRLocalVariable::IRLocalVariable(type::IRType* type, std::string name) : type(type), name(std::move(name))
         {
@@ -721,7 +725,7 @@ namespace lg::ir
         std::string IRConditionalJump::toString()
         {
             return "conditional_jump " + conditionToString(condition) + ", " + operand1->toString() + (
-                operand2 != nullptr ? ", " + operand2->toString() : "") + ", label" + target->name;
+                operand2 != nullptr ? ", " + operand2->toString() : "") + ", label " + target->name;
         }
 
         IRGoto::IRGoto(base::IRBasicBlock* target) : target(target)
@@ -735,7 +739,7 @@ namespace lg::ir
 
         std::string IRGoto::toString()
         {
-            return "goto label" + target->name;
+            return "goto label " + target->name;
         }
 
         IRInvoke::IRInvoke(type::IRType* returnType, value::IRValue* func, std::vector<value::IRValue*> arguments,
@@ -1223,5 +1227,10 @@ namespace lg::ir
     void IRModule::putFunction(function::IRFunction* function)
     {
         functions[function->name] = function;
+    }
+
+    function::IRFunction* IRModule::getFunction(const std::string& name)
+    {
+        return functions[name];
     }
 }
