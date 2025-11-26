@@ -31,6 +31,9 @@ namespace lg::ir::parser
         explicit IRParser(IRModule* module);
         std::any visitProgram(LGIRGrammarParser::ProgramContext* context) override;
         std::any visitGlobalVariable(LGIRGrammarParser::GlobalVariableContext* context) override;
+        std::any visitStructure(LGIRGrammarParser::StructureContext* context) override;
+        std::any visitFields(LGIRGrammarParser::FieldsContext* context) override;
+        std::any visitField(LGIRGrammarParser::FieldContext* context) override;
         std::any visitFunction(LGIRGrammarParser::FunctionContext* context) override;
         std::any visitBasicBlock(LGIRGrammarParser::BasicBlockContext* context) override;
         std::any visitLocalVariables(LGIRGrammarParser::LocalVariablesContext* context) override;

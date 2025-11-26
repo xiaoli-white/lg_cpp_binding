@@ -44,6 +44,37 @@ namespace lg::ir::parser
         return nullptr;
     }
 
+    std::any IRParser::visitStructure(LGIRGrammarParser::StructureContext* context)
+    {
+        visit(context->fields());
+        auto fields = std::any_cast<std::vector<structure::IRField*>>(stack.top());
+        stack.pop();
+        module->putStructure(new structure::IRStructure({}, context->IDENTIFIER()->getText(), std::move(fields)));
+        return nullptr;
+    }
+
+    std::any IRParser::visitFields(LGIRGrammarParser::FieldsContext* context)
+    {
+        std::vector<structure::IRField*> fields;
+        for (const auto& field : context->field())
+        {
+            visit(field);
+            fields.emplace_back(std::any_cast<structure::IRField*>(stack.top()));
+            stack.pop();
+        }
+        stack.emplace(fields);
+        return nullptr;
+    }
+
+    std::any IRParser::visitField(LGIRGrammarParser::FieldContext* context)
+    {
+        visit(context->type());
+        auto* type = std::any_cast<type::IRType*>(stack.top());
+        stack.pop();
+        stack.emplace(new structure::IRField(type, context->IDENTIFIER()->getText()));
+        return nullptr;
+    }
+
     std::any IRParser::visitFunction(LGIRGrammarParser::FunctionContext* context)
     {
         currentFunction = module->getFunction(context->IDENTIFIER()->getText());
