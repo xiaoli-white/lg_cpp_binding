@@ -230,7 +230,7 @@ void lgirgrammarParserInitialize() {
   	418,83,1,0,0,0,419,420,3,62,31,0,420,421,5,82,0,0,421,85,1,0,0,0,422,
   	423,3,64,32,0,423,424,5,83,0,0,424,87,1,0,0,0,425,426,3,66,33,0,426,427,
   	5,9,0,0,427,428,3,80,40,0,428,429,5,10,0,0,429,89,1,0,0,0,430,431,5,78,
-  	0,0,431,432,3,58,29,0,432,433,5,2,0,0,433,434,3,80,40,0,434,435,5,3,0,
+  	0,0,431,432,3,70,35,0,432,433,5,2,0,0,433,434,3,80,40,0,434,435,5,3,0,
   	0,435,91,1,0,0,0,436,437,5,75,0,0,437,438,5,86,0,0,438,93,1,0,0,0,439,
   	440,5,76,0,0,440,441,5,86,0,0,441,95,1,0,0,0,442,443,5,77,0,0,443,444,
   	5,86,0,0,444,97,1,0,0,0,445,446,3,58,29,0,446,447,3,100,50,0,447,99,1,
@@ -4337,8 +4337,8 @@ tree::TerminalNode* LGIRGrammarParser::StructureInitializerContext::CONSTANT() {
   return getToken(LGIRGrammarParser::CONSTANT, 0);
 }
 
-LGIRGrammarParser::TypeContext* LGIRGrammarParser::StructureInitializerContext::type() {
-  return getRuleContext<LGIRGrammarParser::TypeContext>(0);
+LGIRGrammarParser::StructureTypeContext* LGIRGrammarParser::StructureInitializerContext::structureType() {
+  return getRuleContext<LGIRGrammarParser::StructureTypeContext>(0);
 }
 
 LGIRGrammarParser::ConstantsContext* LGIRGrammarParser::StructureInitializerContext::constants() {
@@ -4386,7 +4386,7 @@ LGIRGrammarParser::StructureInitializerContext* LGIRGrammarParser::structureInit
     setState(430);
     match(LGIRGrammarParser::CONSTANT);
     setState(431);
-    type();
+    structureType();
     setState(432);
     match(LGIRGrammarParser::T__1);
     setState(433);

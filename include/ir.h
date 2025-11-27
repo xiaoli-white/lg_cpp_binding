@@ -393,7 +393,7 @@ namespace lg::ir
             public:
                 type::IRArrayType* type;
                 std::vector<IRConstant*> elements;
-                IRArrayConstant(type::IRArrayType* type, std::vector<IRConstant*> values);
+                IRArrayConstant(type::IRArrayType* type, std::vector<IRConstant*> elements);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;

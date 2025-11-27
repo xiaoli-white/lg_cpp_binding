@@ -435,6 +435,43 @@ namespace lg::ir::parser
         return nullptr;
     }
 
+    std::any IRParser::visitDecimalConstant(LGIRGrammarParser::DecimalConstantContext* context)
+    {
+        visit(context->decimalType());
+        auto* type = std::any_cast<type::IRType*>(stack.top());
+        stack.pop();
+        if (dynamic_cast<type::IRFloatType*>(type) != nullptr)
+        {
+            stack.push(std::make_any<value::IRValue*>(
+                new value::constant::IRFloatConstant(std::stof(context->DECIMAL_NUMBER()->getText()))));
+        }
+        else if (dynamic_cast<type::IRDoubleType*>(type) != nullptr)
+        {
+            stack.push(std::make_any<value::IRValue*>(
+                new value::constant::IRDoubleConstant(std::stod(context->DECIMAL_NUMBER()->getText()))));
+        }
+        else
+        {
+            throw std::runtime_error("decimal constant type mismatch");
+        }
+        return nullptr;
+    }
+
+    std::any IRParser::visitArrayConstant(LGIRGrammarParser::ArrayConstantContext* context)
+    {
+        visit(context->arrayType());
+        auto* type = std::any_cast<type::IRType*>(stack.top());
+        stack.pop();
+        auto* arrayType = dynamic_cast<type::IRArrayType*>(type);
+        if (arrayType == nullptr) throw std::runtime_error("array constant type mismatch");
+        visit(context->constants());
+        auto elements = std::any_cast<std::vector<value::constant::IRConstant*>>(stack.top());
+        stack.pop();
+        stack.emplace(std::make_any<value::IRValue*>(
+            new value::constant::IRArrayConstant(arrayType, std::move(elements))));
+        return nullptr;
+    }
+
     std::any IRParser::visitTypes(LGIRGrammarParser::TypesContext* context)
     {
         std::vector<type::IRType*> types;

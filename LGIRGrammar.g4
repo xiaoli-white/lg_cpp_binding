@@ -48,7 +48,7 @@ constant: integerConstant | decimalConstant | arrayConstant | structureInitializ
 integerConstant: integerType INT_NUMBER;
 decimalConstant: decimalType DECIMAL_NUMBER;
 arrayConstant: arrayType '[' constants ']';
-structureInitializer: CONSTANT type '{' constants '}';
+structureInitializer: CONSTANT structureType '{' constants '}';
 functionReference: FUNCREF IDENTIFIER;
 globalReference: GLOBALREF IDENTIFIER;
 localReference: LOCALREF IDENTIFIER;

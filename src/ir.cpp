@@ -484,7 +484,7 @@ namespace lg::ir
             }
 
             IRArrayConstant::IRArrayConstant(type::IRArrayType* type,
-                                             std::vector<IRConstant*> values) : type(type), elements(std::move(values))
+                                             std::vector<IRConstant*> elements) : type(type), elements(std::move(elements))
             {
             }
 
