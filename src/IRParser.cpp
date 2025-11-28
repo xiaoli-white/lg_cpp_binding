@@ -325,11 +325,22 @@ namespace lg::ir::parser
 
     std::any IRParser::visitStackAlloc(LGIRGrammarParser::StackAllocContext* context)
     {
-        visit(context->value());
-        auto* size = std::any_cast<value::IRValue*>(stack.top());
+        visit(context->type());
+        auto* type = std::any_cast<type::IRType*>(stack.top());
         stack.pop();
+        value::IRValue* size;
+        if (context->value())
+        {
+            visit(context->value());
+            size = std::any_cast<value::IRValue*>(stack.top());
+            stack.pop();
+        }
+        else
+        {
+            size = nullptr;
+        }
         const auto regName = getTargetRegisterName(context->registerName());
-        auto* reg = builder.createStackAlloc(size, regName);
+        auto* reg = builder.createStackAlloc(type, size, regName);
         name2Register[regName] = reg;
         return nullptr;
     }
