@@ -2,7 +2,7 @@ grammar LGIRGrammar;
 
 program: (globalVariable | structure | function)* EOF;
 
-globalVariable: GLOBAL IDENTIFIER '=' constant;
+globalVariable: CONST GLOBAL IDENTIFIER '=' constant;
 structure: STRUCTURE IDENTIFIER '{' fields '}';
 fields: field (',' field)* |;
 field: type IDENTIFIER;
@@ -42,9 +42,9 @@ structureType: STRUCTURE IDENTIFIER;
 functionReferenceType: '(' types (',' ELLIPSIS)? ')' '->' type;
 types: type (',' type)* | ;
 values: value (',' value)* | ;
-value: register | constant | functionReference | globalReference | localReference;
+value: register | constant | localReference;
 constants: constant (',' constant)* | ;
-constant: integerConstant | decimalConstant | arrayConstant | structureInitializer | stringConstant;
+constant: integerConstant | decimalConstant | arrayConstant | structureInitializer | stringConstant | functionReference | globalReference;
 integerConstant: integerType INT_NUMBER;
 decimalConstant: decimalType DECIMAL_NUMBER;
 arrayConstant: arrayType '[' constants ']';
@@ -77,6 +77,7 @@ FLOAT: 'float';
 DOUBLE: 'double';
 VOID: 'void';
 
+CONST: 'const';
 GLOBAL: 'global';
 STRUCTURE: 'structure';
 FUNCTION: 'function';

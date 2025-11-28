@@ -18,7 +18,8 @@ namespace lg::ir::parser
             module->putStructure(new structure::IRStructure({}, structure->IDENTIFIER()->getText(), {}));
         for (const auto& structure : context->structure()) visit(structure);
         for (const auto& globalVariable : context->globalVariable())
-            module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->IDENTIFIER()->getText(), nullptr));
+            module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->IDENTIFIER()->getText(),
+                                                                 globalVariable->CONST() != nullptr, nullptr));
         for (const auto& globalVariable : context->globalVariable()) visit(globalVariable);
         for (const auto& func : context->function())
         {

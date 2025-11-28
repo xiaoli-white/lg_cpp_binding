@@ -111,8 +111,9 @@ namespace lg::ir
         public:
             type::IRType* type;
             std::string name;
+            bool isConstant;
             value::constant::IRConstant* initializer = nullptr;
-            IRGlobalVariable(std::string name, value::constant::IRConstant* initializer);
+            IRGlobalVariable(std::string name, bool isConstant, value::constant::IRConstant* initializer);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             void setInitializer(value::constant::IRConstant* initializer);
