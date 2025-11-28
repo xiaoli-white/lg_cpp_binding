@@ -2,7 +2,7 @@ grammar LGIRGrammar;
 
 program: (globalVariable | structure | function)* EOF;
 
-globalVariable: CONST GLOBAL IDENTIFIER '=' constant;
+globalVariable: CONST? GLOBAL IDENTIFIER '=' constant;
 structure: STRUCTURE IDENTIFIER '{' fields '}';
 fields: field (',' field)* |;
 field: type IDENTIFIER;

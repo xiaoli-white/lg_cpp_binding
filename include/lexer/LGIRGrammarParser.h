@@ -147,10 +147,10 @@ public:
   public:
     GlobalVariableContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *CONST();
     antlr4::tree::TerminalNode *GLOBAL();
     antlr4::tree::TerminalNode *IDENTIFIER();
     ConstantContext *constant();
+    antlr4::tree::TerminalNode *CONST();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
