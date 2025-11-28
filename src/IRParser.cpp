@@ -17,6 +17,8 @@ namespace lg::ir::parser
         for (const auto& structure : context->structure())
             module->putStructure(new structure::IRStructure({}, structure->IDENTIFIER()->getText(), {}));
         for (const auto& structure : context->structure()) visit(structure);
+        for (const auto& globalVariable : context->globalVariable())
+            module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->IDENTIFIER()->getText(), nullptr));
         for (const auto& globalVariable : context->globalVariable()) visit(globalVariable);
         for (const auto& func : context->function())
         {
@@ -43,7 +45,7 @@ namespace lg::ir::parser
         auto* value = std::any_cast<value::IRValue*>(stack.top());
         auto* constant = dynamic_cast<value::constant::IRConstant*>(value);
         if (constant == nullptr) throw std::runtime_error("Initializer must be a constant");
-        module->putGlobalVariable(new base::IRGlobalVariable(context->IDENTIFIER()->getText(), constant));
+        module->getGlobalVariable(context->IDENTIFIER()->getText())->initializer = constant;
         return nullptr;
     }
 
@@ -218,7 +220,8 @@ namespace lg::ir::parser
         if (context->value().size() == 1)
         {
             operand2 = nullptr;
-        } else
+        }
+        else
         {
             visit(context->value(1));
             operand2 = std::any_cast<value::IRValue*>(stack.top());
