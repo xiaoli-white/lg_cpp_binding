@@ -22,7 +22,7 @@ return: RETURN value?;
 setRegister: registerName '=' value;
 getElementPointer: registerName '=' GETELEMENTPTR value (',' value)+;
 cmp: registerName '=' CMP condition ',' value ',' value;
-conditionalJump: CONDITIONAL_JUMP condition ',' value ',' value ',' label;
+conditionalJump: CONDITIONAL_JUMP condition ',' value (',' value)? ',' label;
 unaryOperates: registerName '=' unaryOperator value;
 binaryOperates: registerName '=' binaryOperator value ',' value;
 typeCast: registerName '=' typeCastKind value 'to' type;

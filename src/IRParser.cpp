@@ -214,9 +214,16 @@ namespace lg::ir::parser
         visit(context->value(0));
         auto* operand1 = std::any_cast<value::IRValue*>(stack.top());
         stack.pop();
-        visit(context->value(1));
-        auto* operand2 = std::any_cast<value::IRValue*>(stack.top());
-        stack.pop();
+        value::IRValue* operand2;
+        if (context->value().size() == 1)
+        {
+            operand2 = nullptr;
+        } else
+        {
+            visit(context->value(1));
+            operand2 = std::any_cast<value::IRValue*>(stack.top());
+            stack.pop();
+        }
         visit(context->label());
         builder.getInsertPoint()->addInstruction(
             new instruction::IRConditionalJump(condition, operand1, operand2,
