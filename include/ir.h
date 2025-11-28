@@ -45,8 +45,6 @@ namespace lg::ir
     {
         class IRValue;
         class IRRegister;
-        class IRFunctionReference;
-        class IRGlobalVariableReference;
         class IRLocalVariableReference;
 
         namespace constant
@@ -59,6 +57,8 @@ namespace lg::ir
             class IRStringConstant;
             class IRNullptrConstant;
             class IRStructureInitializer;
+            class IRFunctionReference;
+            class IRGlobalVariableReference;
         }
     }
 
@@ -115,6 +115,7 @@ namespace lg::ir
             IRGlobalVariable(std::string name, value::constant::IRConstant* initializer);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+            void setInitializer(value::constant::IRConstant* initializer);
         };
 
         class IRControlFlowGraph final
@@ -319,27 +320,6 @@ namespace lg::ir
             std::string toString() override;
         };
 
-        class IRFunctionReference final : public IRValue
-        {
-        public:
-            function::IRFunction* function;
-            explicit IRFunctionReference(function::IRFunction* function);
-            type::IRType* getType() override;
-            std::any accept(IRVisitor* visitor, std::any additional) override;
-            std::string toString() override;
-        };
-
-        class IRGlobalVariableReference final : public IRValue
-        {
-        public:
-            type::IRType* type;
-            base::IRGlobalVariable* variable;
-            explicit IRGlobalVariableReference(base::IRGlobalVariable* variable);
-            type::IRType* getType() override;
-            std::any accept(IRVisitor* visitor, std::any additional) override;
-            std::string toString() override;
-        };
-
         class IRLocalVariableReference final : public IRValue
         {
         public:
@@ -426,6 +406,27 @@ namespace lg::ir
                 type::IRStructureType* type;
                 std::vector<IRConstant*> elements;
                 IRStructureInitializer(type::IRStructureType* type, std::vector<IRConstant*> elements);
+                type::IRType* getType() override;
+                std::any accept(IRVisitor* visitor, std::any additional) override;
+                std::string toString() override;
+            };
+
+            class IRFunctionReference final : public IRValue
+            {
+            public:
+                function::IRFunction* function;
+                explicit IRFunctionReference(function::IRFunction* function);
+                type::IRType* getType() override;
+                std::any accept(IRVisitor* visitor, std::any additional) override;
+                std::string toString() override;
+            };
+
+            class IRGlobalVariableReference final : public IRValue
+            {
+            public:
+                type::IRType* type;
+                base::IRGlobalVariable* variable;
+                explicit IRGlobalVariableReference(base::IRGlobalVariable* variable);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
@@ -752,9 +753,11 @@ namespace lg::ir
         virtual std::any visitFunctionReferenceType(type::IRFunctionReferenceType* irFunctionReferenceType,
                                                     std::any additional);
         virtual std::any visitRegister(value::IRRegister* irRegister, std::any additional);
-        virtual std::any visitFunctionReference(value::IRFunctionReference* irFunctionReference, std::any additional);
-        virtual std::any visitGlobalVariableReference(value::IRGlobalVariableReference* irGlobalVariableReference,
-                                                      std::any additional);
+        virtual std::any visitFunctionReference(value::constant::IRFunctionReference* irFunctionReference,
+                                                std::any additional);
+        virtual std::any visitGlobalVariableReference(
+            value::constant::IRGlobalVariableReference* irGlobalVariableReference,
+            std::any additional);
         virtual std::any visitLocalVariableReference(value::IRLocalVariableReference* irLocalVariableReference,
                                                      std::any additional);
         virtual std::any visitIntegerConstant(value::constant::IRIntegerConstant* irIntegerConstant,

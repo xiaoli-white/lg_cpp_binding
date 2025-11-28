@@ -589,7 +589,7 @@ namespace lg::ir
     value::IRRegister* IRBuilder::createInvoke(function::IRFunction* function, std::vector<value::IRValue*> args,
                                                const std::string& targetName) const
     {
-        return createInvoke(function->returnType, new value::IRFunctionReference(function), std::move(args),
+        return createInvoke(function->returnType, new value::constant::IRFunctionReference(function), std::move(args),
                             targetName);
     }
 
@@ -601,7 +601,7 @@ namespace lg::ir
                               ? new value::IRRegister(allocateRegisterName())
                               : nullptr);
         insertPoint->addInstruction(
-            new instruction::IRInvoke(returnType, new value::IRFunctionReference(function), std::move(args), reg));
+            new instruction::IRInvoke(returnType, new value::constant::IRFunctionReference(function), std::move(args), reg));
         return reg;
     }
 

@@ -365,45 +365,6 @@ namespace lg::ir
             return type->toString() + " %" + name;
         }
 
-        IRFunctionReference::IRFunctionReference(function::IRFunction* function) : function(function)
-        {
-        }
-
-        type::IRType* IRFunctionReference::getType()
-        {
-            return function->returnType;
-        }
-
-        std::any IRFunctionReference::accept(IRVisitor* visitor, std::any additional)
-        {
-            return visitor->visitFunctionReference(this, std::move(additional));
-        }
-
-        std::string IRFunctionReference::toString()
-        {
-            return "funcref " + function->name;
-        }
-
-        IRGlobalVariableReference::IRGlobalVariableReference(base::IRGlobalVariable* variable) : variable(variable)
-        {
-            type = type::IRPointerType::get(variable->type);
-        }
-
-        type::IRType* IRGlobalVariableReference::getType()
-        {
-            return type;
-        }
-
-        std::any IRGlobalVariableReference::accept(IRVisitor* visitor, std::any additional)
-        {
-            return visitor->visitGlobalVariableReference(this, std::move(additional));
-        }
-
-        std::string IRGlobalVariableReference::toString()
-        {
-            return "globalref " + variable->name;
-        }
-
         IRLocalVariableReference::IRLocalVariableReference(function::IRLocalVariable* variable) : variable(variable)
         {
             type = type::IRPointerType::get(variable->type);
@@ -576,6 +537,45 @@ namespace lg::ir
                 }
                 s += "}";
                 return s;
+            }
+
+            IRFunctionReference::IRFunctionReference(function::IRFunction* function) : function(function)
+            {
+            }
+
+            type::IRType* IRFunctionReference::getType()
+            {
+                return function->returnType;
+            }
+
+            std::any IRFunctionReference::accept(IRVisitor* visitor, std::any additional)
+            {
+                return visitor->visitFunctionReference(this, std::move(additional));
+            }
+
+            std::string IRFunctionReference::toString()
+            {
+                return "funcref " + function->name;
+            }
+
+            IRGlobalVariableReference::IRGlobalVariableReference(base::IRGlobalVariable* variable) : variable(variable)
+            {
+                type = type::IRPointerType::get(variable->type);
+            }
+
+            type::IRType* IRGlobalVariableReference::getType()
+            {
+                return type;
+            }
+
+            std::any IRGlobalVariableReference::accept(IRVisitor* visitor, std::any additional)
+            {
+                return visitor->visitGlobalVariableReference(this, std::move(additional));
+            }
+
+            std::string IRGlobalVariableReference::toString()
+            {
+                return "globalref " + variable->name;
             }
         }
     }
@@ -1214,13 +1214,15 @@ namespace lg::ir
         return nullptr;
     }
 
-    std::any IRVisitor::visitFunctionReference(value::IRFunctionReference* irFunctionReference, std::any additional)
+    std::any IRVisitor::visitFunctionReference(value::constant::IRFunctionReference* irFunctionReference,
+                                               std::any additional)
     {
         return nullptr;
     }
 
-    std::any IRVisitor::visitGlobalVariableReference(value::IRGlobalVariableReference* irGlobalVariableReference,
-                                                     std::any additional)
+    std::any IRVisitor::visitGlobalVariableReference(
+        value::constant::IRGlobalVariableReference* irGlobalVariableReference,
+        std::any additional)
     {
         return nullptr;
     }

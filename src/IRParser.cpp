@@ -436,14 +436,14 @@ namespace lg::ir::parser
     std::any IRParser::visitFunctionReference(LGIRGrammarParser::FunctionReferenceContext* context)
     {
         auto* func = module->getFunction(context->IDENTIFIER()->getText());
-        stack.emplace(std::make_any<value::IRValue*>(new value::IRFunctionReference(func)));
+        stack.emplace(std::make_any<value::IRValue*>(new value::constant::IRFunctionReference(func)));
         return nullptr;
     }
 
     std::any IRParser::visitGlobalReference(LGIRGrammarParser::GlobalReferenceContext* context)
     {
         auto* global = module->getGlobalVariable(context->IDENTIFIER()->getText());
-        stack.emplace(std::make_any<value::IRValue*>(new value::IRGlobalVariableReference(global)));
+        stack.emplace(std::make_any<value::IRValue*>(new value::constant::IRGlobalVariableReference(global)));
         return nullptr;
     }
 
