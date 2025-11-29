@@ -7,11 +7,21 @@ namespace lg::ir
 {
     namespace base
     {
-        IRGlobalVariable::IRGlobalVariable(std::string name, bool isConstant,
-                                           value::constant::IRConstant* initializer) :
-            name(std::move(name)), isConstant(isConstant), initializer(initializer)
+        IRGlobalVariable::IRGlobalVariable(bool isConstant, std::string name, type::IRType* type,
+                                           value::constant::IRConstant* initializer) : isExtern(false),
+            isConstant(isConstant), type(type), name(std::move(name)), initializer(initializer)
         {
-            if (initializer != nullptr) type = initializer->getType();
+        }
+
+        IRGlobalVariable::IRGlobalVariable(bool isConstant, std::string name,
+                                           value::constant::IRConstant* initializer) : isExtern(false),
+            isConstant(isConstant), name(std::move(name)), initializer(initializer), type(initializer->getType())
+        {
+        }
+
+        IRGlobalVariable::IRGlobalVariable(bool isConstant, std::string name, type::IRType* type) : isExtern(false),
+            isConstant(isConstant), type(type), name(std::move(name))
+        {
         }
 
         std::any IRGlobalVariable::accept(IRVisitor* visitor, std::any additional)
@@ -21,7 +31,8 @@ namespace lg::ir
 
         std::string IRGlobalVariable::toString()
         {
-            return std::string(isConstant ? "constant " : "") + "global " + name + " = " + initializer->toString();
+            return std::string(isExtern ? "extern " : "") + std::string(isConstant ? "constant " : "") + "global " +
+                name + (isExtern ? ": " + type->toString() : " = " + initializer->toString());
         }
 
         void IRGlobalVariable::setInitializer(value::constant::IRConstant* initializer)
@@ -593,13 +604,20 @@ namespace lg::ir
         IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
                                std::vector<IRLocalVariable*> args, std::vector<IRLocalVariable*> locals,
                                base::IRControlFlowGraph* cfg) : attributes(std::move(attributes)),
+                                                                isExtern(cfg == nullptr),
                                                                 returnType(returnType), name(std::move(name)),
                                                                 args(std::move(args)), locals(std::move(locals)),
                                                                 cfg(cfg)
         {
             if (cfg != nullptr) cfg->function = this;
             for (const auto& arg : args) name2LocalVariable[arg->name] = arg;
-            for (const auto& local : locals) name2LocalVariable[local->name] = local;
+            if (!isExtern) for (const auto& local : locals) name2LocalVariable[local->name] = local;
+        }
+
+        IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
+                               std::vector<IRLocalVariable*> args) : IRFunction(
+            std::move(attributes), returnType, std::move(name), std::move(args), {}, nullptr)
+        {
         }
 
         std::any IRFunction::accept(IRVisitor* visitor, std::any additional)
@@ -1006,8 +1024,8 @@ namespace lg::ir
         std::string IRStackAllocate::toString()
         {
             return "%" + target->name + " = stack_alloc " + type->toString() + (size != nullptr
-                    ? ", " + size->toString()
-                    : "");
+                ? ", " + size->toString()
+                : "");
         }
 
         IRTypeCast::IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType, value::IRRegister* target) :
@@ -1127,8 +1145,13 @@ namespace lg::ir
     std::any IRVisitor::visitGlobalVariable(base::IRGlobalVariable* irGlobalVariable, std::any additional)
     {
         visit(irGlobalVariable->type, additional);
-        return visit(irGlobalVariable->initializer, std::move(additional));
+        if (irGlobalVariable->initializer != nullptr)
+        {
+            visit(irGlobalVariable->initializer, std::move(additional));
+        }
+        return nullptr;
     }
+
 
     std::any IRVisitor::visitFunction(function::IRFunction* irFunction, std::any additional)
     {
@@ -1137,12 +1160,12 @@ namespace lg::ir
         {
             visit(arg, additional);
         }
-        for (auto& local : irFunction->locals)
-        {
-            visit(local, additional);
-        }
         if (irFunction->cfg != nullptr)
         {
+            for (auto& local : irFunction->locals)
+            {
+                visit(local, additional);
+            }
             for (auto& block : irFunction->cfg->basicBlocks | std::views::values)
             {
                 for (auto& instruction : block->instructions)

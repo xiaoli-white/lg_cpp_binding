@@ -2,11 +2,11 @@ grammar LGIRGrammar;
 
 program: (globalVariable | structure | function)* EOF;
 
-globalVariable: CONST? GLOBAL IDENTIFIER '=' constant;
+globalVariable: EXTERN? CONST? GLOBAL IDENTIFIER ('=' constant)? (':' type)?;
 structure: STRUCTURE IDENTIFIER '{' fields '}';
 fields: field (',' field)* |;
 field: type IDENTIFIER;
-function: FUNCTION type IDENTIFIER '(' localVariables ')' '{' localVariables '}' '{' (basicBlock)* '}';
+function: EXTERN? FUNCTION type IDENTIFIER '(' localVariables ')' ('{' localVariables '}' '{' (basicBlock)* '}')?;
 localVariables: localVariable (',' localVariable)* |;
 localVariable: type IDENTIFIER;
 basicBlock: IDENTIFIER ':' (statement)*;
@@ -80,6 +80,7 @@ VOID: 'void';
 CONST: 'const';
 GLOBAL: 'global';
 STRUCTURE: 'structure';
+EXTERN: 'extern';
 FUNCTION: 'function';
 
 NOP: 'nop';

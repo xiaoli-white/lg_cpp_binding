@@ -18,8 +18,23 @@ namespace lg::ir::parser
             module->putStructure(new structure::IRStructure({}, structure->IDENTIFIER()->getText(), {}));
         for (const auto& structure : context->structure()) visit(structure);
         for (const auto& globalVariable : context->globalVariable())
-            module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->IDENTIFIER()->getText(),
-                                                                 globalVariable->CONST() != nullptr, nullptr));
+        {
+            if (globalVariable->EXTERN())
+            {
+                visit(globalVariable->type());
+                auto* type = std::any_cast<type::IRType*>(stack.top());
+                stack.pop();
+                module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->CONST() != nullptr,
+                                                                     globalVariable->IDENTIFIER()->getText(), type));
+            }
+            else
+            {
+                module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->CONST() != nullptr,
+                                                                     globalVariable->IDENTIFIER()->getText(),
+                                                                     static_cast<value::constant::IRConstant*>(
+                                                                         nullptr)));
+            }
+        }
         for (const auto& globalVariable : context->globalVariable()) visit(globalVariable);
         for (const auto& func : context->function())
         {
@@ -29,11 +44,19 @@ namespace lg::ir::parser
             visit(func->localVariables(0));
             const auto args = std::any_cast<std::vector<function::IRLocalVariable*>>(stack.top());
             stack.pop();
-            visit(func->localVariables(1));
-            const auto locals = std::any_cast<std::vector<function::IRLocalVariable*>>(stack.top());
-            stack.pop();
-            auto* function = new function::IRFunction({}, returnType, func->IDENTIFIER()->getText(), args, locals,
-                                                      new base::IRControlFlowGraph());
+            function::IRFunction* function;
+            if (func->EXTERN())
+            {
+                function = new function::IRFunction({}, returnType, func->IDENTIFIER()->getText(), args);
+            }
+            else
+            {
+                visit(func->localVariables(1));
+                const auto locals = std::any_cast<std::vector<function::IRLocalVariable*>>(stack.top());
+                stack.pop();
+                function = new function::IRFunction({}, returnType, func->IDENTIFIER()->getText(), args, locals,
+                                                    new base::IRControlFlowGraph());
+            }
             module->putFunction(function);
         }
         for (const auto& func : context->function()) visit(func);
@@ -42,11 +65,14 @@ namespace lg::ir::parser
 
     std::any IRParser::visitGlobalVariable(LGIRGrammarParser::GlobalVariableContext* context)
     {
-        visit(context->constant());
-        auto* value = std::any_cast<value::IRValue*>(stack.top());
-        auto* constant = dynamic_cast<value::constant::IRConstant*>(value);
-        if (constant == nullptr) throw std::runtime_error("Initializer must be a constant");
-        module->getGlobalVariable(context->IDENTIFIER()->getText())->setInitializer(constant);
+        if (!context->EXTERN())
+        {
+            visit(context->constant());
+            auto* value = std::any_cast<value::IRValue*>(stack.top());
+            auto* constant = dynamic_cast<value::constant::IRConstant*>(value);
+            if (constant == nullptr) throw std::runtime_error("Initializer must be a constant");
+            module->getGlobalVariable(context->IDENTIFIER()->getText())->setInitializer(constant);
+        }
         return nullptr;
     }
 
@@ -85,13 +111,16 @@ namespace lg::ir::parser
     std::any IRParser::visitFunction(LGIRGrammarParser::FunctionContext* context)
     {
         currentFunction = module->getFunction(context->IDENTIFIER()->getText());
-        for (auto* basicBlock : context->basicBlock())
+        if (!context->EXTERN())
         {
-            auto* block = new base::IRBasicBlock(basicBlock->IDENTIFIER()->getText());
-            currentFunction->addBasicBlock(block);
+            for (auto* basicBlock : context->basicBlock())
+            {
+                auto* block = new base::IRBasicBlock(basicBlock->IDENTIFIER()->getText());
+                currentFunction->addBasicBlock(block);
+            }
+            for (auto* basicBlock : context->basicBlock())visit(basicBlock);
+            name2Register.clear();
         }
-        for (auto* basicBlock : context->basicBlock())visit(basicBlock);
-        name2Register.clear();
         return nullptr;
     }
 

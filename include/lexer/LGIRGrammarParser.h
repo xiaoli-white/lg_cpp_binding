@@ -17,16 +17,16 @@ public:
     T__14 = 15, T__15 = 16, T__16 = 17, T__17 = 18, T__18 = 19, T__19 = 20, 
     T__20 = 21, I1 = 22, I8 = 23, U8 = 24, I16 = 25, U16 = 26, I32 = 27, 
     U32 = 28, I64 = 29, U64 = 30, FLOAT = 31, DOUBLE = 32, VOID = 33, CONST = 34, 
-    GLOBAL = 35, STRUCTURE = 36, FUNCTION = 37, NOP = 38, STACK_ALLOC = 39, 
-    LOAD = 40, STORE = 41, ASM = 42, GOTO = 43, INVOKE = 44, RETURN = 45, 
-    GETELEMENTPTR = 46, CMP = 47, CONDITIONAL_JUMP = 48, PHI = 49, SWITCH = 50, 
-    INC = 51, DEC = 52, NOT = 53, NEG = 54, ADD = 55, SUB = 56, MUL = 57, 
-    DIV = 58, MOD = 59, AND = 60, OR = 61, XOR = 62, SHL = 63, SHR = 64, 
-    USHR = 65, ZEXT = 66, SEXT = 67, TRUNC = 68, ITOF = 69, FTOI = 70, ITOP = 71, 
-    PTOI = 72, PTOP = 73, FEXT = 74, FTRUNC = 75, FUNCREF = 76, GLOBALREF = 77, 
-    LOCALREF = 78, CONSTANT = 79, LABEL = 80, STRING = 81, ELLIPSIS = 82, 
-    MULTIPLY = 83, INT_NUMBER = 84, DECIMAL_NUMBER = 85, WS = 86, STRING_LITERAL = 87, 
-    IDENTIFIER = 88
+    GLOBAL = 35, STRUCTURE = 36, EXTERN = 37, FUNCTION = 38, NOP = 39, STACK_ALLOC = 40, 
+    LOAD = 41, STORE = 42, ASM = 43, GOTO = 44, INVOKE = 45, RETURN = 46, 
+    GETELEMENTPTR = 47, CMP = 48, CONDITIONAL_JUMP = 49, PHI = 50, SWITCH = 51, 
+    INC = 52, DEC = 53, NOT = 54, NEG = 55, ADD = 56, SUB = 57, MUL = 58, 
+    DIV = 59, MOD = 60, AND = 61, OR = 62, XOR = 63, SHL = 64, SHR = 65, 
+    USHR = 66, ZEXT = 67, SEXT = 68, TRUNC = 69, ITOF = 70, FTOI = 71, ITOP = 72, 
+    PTOI = 73, PTOP = 74, FEXT = 75, FTRUNC = 76, FUNCREF = 77, GLOBALREF = 78, 
+    LOCALREF = 79, CONSTANT = 80, LABEL = 81, STRING = 82, ELLIPSIS = 83, 
+    MULTIPLY = 84, INT_NUMBER = 85, DECIMAL_NUMBER = 86, WS = 87, STRING_LITERAL = 88, 
+    IDENTIFIER = 89
   };
 
   enum {
@@ -149,8 +149,10 @@ public:
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *GLOBAL();
     antlr4::tree::TerminalNode *IDENTIFIER();
-    ConstantContext *constant();
+    antlr4::tree::TerminalNode *EXTERN();
     antlr4::tree::TerminalNode *CONST();
+    ConstantContext *constant();
+    TypeContext *type();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -219,6 +221,7 @@ public:
     antlr4::tree::TerminalNode *IDENTIFIER();
     std::vector<LocalVariablesContext *> localVariables();
     LocalVariablesContext* localVariables(size_t i);
+    antlr4::tree::TerminalNode *EXTERN();
     std::vector<BasicBlockContext *> basicBlock();
     BasicBlockContext* basicBlock(size_t i);
 
