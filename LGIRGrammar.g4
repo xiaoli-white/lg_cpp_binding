@@ -62,7 +62,7 @@ condition: 'if_true' | 'if_false' | 'e' | 'ne' | 'ne' | 'l' | 'le' | 'g' | 'ge';
 
 unaryOperator: INC | DEC | NOT | NEG;
 binaryOperator: ADD | SUB | MUL | DIV | MOD | AND | OR | XOR | SHL | SHR | USHR;
-typeCastKind: ZEXT | SEXT | TRUNC | ITOF | FTOI | ITOP | PTOI | PTOP | FEXT | FTRUNC;
+typeCastKind: ZEXT | SEXT | TRUNC | INTTOF | FTOINT | INTTOPTR | PTRTOINT | PTRTOPTR | FEXT | FTRUNC;
 
 I1: 'i1';
 I8: 'i8';
@@ -115,11 +115,11 @@ USHR: 'ushr';
 ZEXT: 'zext';
 SEXT: 'sext';
 TRUNC: 'trunc';
-ITOF: 'itof';
-FTOI: 'ftoi';
-ITOP: 'itop';
-PTOI: 'ptoi';
-PTOP: 'ptop';
+INTTOF: 'inttof';
+FTOINT: 'ftoint';
+INTTOPTR: 'inttoptr';
+PTRTOINT: 'ptrtoint';
+PTRTOPTR: 'ptrtoptr';
 FEXT: 'fext';
 FTRUNC: 'ftrunc';
 

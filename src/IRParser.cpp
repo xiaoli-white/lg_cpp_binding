@@ -758,11 +758,11 @@ namespace lg::ir::parser
         if (context->ZEXT()) return instruction::IRTypeCast::Kind::ZEXT;
         if (context->SEXT()) return instruction::IRTypeCast::Kind::SEXT;
         if (context->TRUNC()) return instruction::IRTypeCast::Kind::TRUNC;
-        if (context->ITOF()) return instruction::IRTypeCast::Kind::ITOF;
-        if (context->FTOI()) return instruction::IRTypeCast::Kind::FTOI;
-        if (context->ITOP()) return instruction::IRTypeCast::Kind::ITOP;
-        if (context->PTOI()) return instruction::IRTypeCast::Kind::PTOI;
-        if (context->PTOP()) return instruction::IRTypeCast::Kind::PTOP;
+        if (context->INTTOF()) return instruction::IRTypeCast::Kind::INTTOF;
+        if (context->FTOINT()) return instruction::IRTypeCast::Kind::FTOINT;
+        if (context->INTTOPTR()) return instruction::IRTypeCast::Kind::INTTOPTR;
+        if (context->PTRTOINT()) return instruction::IRTypeCast::Kind::PTRTOINT;
+        if (context->PTRTOPTR()) return instruction::IRTypeCast::Kind::PTRTOPTR;
         if (context->FEXT()) return instruction::IRTypeCast::Kind::FEXT;
         if (context->FTRUNC()) return instruction::IRTypeCast::Kind::FTRUNC;
         throw std::runtime_error("Invalid type cast kind: " + context->getText());

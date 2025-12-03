@@ -22,11 +22,11 @@ public:
     GETELEMENTPTR = 47, CMP = 48, CONDITIONAL_JUMP = 49, PHI = 50, SWITCH = 51, 
     INC = 52, DEC = 53, NOT = 54, NEG = 55, ADD = 56, SUB = 57, MUL = 58, 
     DIV = 59, MOD = 60, AND = 61, OR = 62, XOR = 63, SHL = 64, SHR = 65, 
-    USHR = 66, ZEXT = 67, SEXT = 68, TRUNC = 69, ITOF = 70, FTOI = 71, ITOP = 72, 
-    PTOI = 73, PTOP = 74, FEXT = 75, FTRUNC = 76, FUNCREF = 77, GLOBALREF = 78, 
-    LOCALREF = 79, CONSTANT = 80, LABEL = 81, STRING = 82, ELLIPSIS = 83, 
-    MULTIPLY = 84, INT_NUMBER = 85, DECIMAL_NUMBER = 86, WS = 87, STRING_LITERAL = 88, 
-    IDENTIFIER = 89
+    USHR = 66, ZEXT = 67, SEXT = 68, TRUNC = 69, INTTOF = 70, FTOINT = 71, 
+    INTTOPTR = 72, PTRTOINT = 73, PTRTOPTR = 74, FEXT = 75, FTRUNC = 76, 
+    FUNCREF = 77, GLOBALREF = 78, LOCALREF = 79, CONSTANT = 80, LABEL = 81, 
+    STRING = 82, ELLIPSIS = 83, MULTIPLY = 84, INT_NUMBER = 85, DECIMAL_NUMBER = 86, 
+    WS = 87, STRING_LITERAL = 88, IDENTIFIER = 89
   };
 
   enum {
@@ -1111,11 +1111,11 @@ public:
     antlr4::tree::TerminalNode *ZEXT();
     antlr4::tree::TerminalNode *SEXT();
     antlr4::tree::TerminalNode *TRUNC();
-    antlr4::tree::TerminalNode *ITOF();
-    antlr4::tree::TerminalNode *FTOI();
-    antlr4::tree::TerminalNode *ITOP();
-    antlr4::tree::TerminalNode *PTOI();
-    antlr4::tree::TerminalNode *PTOP();
+    antlr4::tree::TerminalNode *INTTOF();
+    antlr4::tree::TerminalNode *FTOINT();
+    antlr4::tree::TerminalNode *INTTOPTR();
+    antlr4::tree::TerminalNode *PTRTOINT();
+    antlr4::tree::TerminalNode *PTRTOPTR();
     antlr4::tree::TerminalNode *FEXT();
     antlr4::tree::TerminalNode *FTRUNC();
 

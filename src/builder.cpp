@@ -496,7 +496,7 @@ namespace lg::ir
     {
         const auto reg = new value::IRRegister(targetName);
         insertPoint->addInstruction(
-            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::ITOF, source, targetType, reg));
+            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::INTTOF, source, targetType, reg));
         return reg;
     }
 
@@ -511,7 +511,7 @@ namespace lg::ir
     {
         const auto reg = new value::IRRegister(targetName);
         insertPoint->addInstruction(
-            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::FTOI, source, targetType, reg));
+            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::FTOINT, source, targetType, reg));
         return reg;
     }
 
@@ -526,7 +526,7 @@ namespace lg::ir
     {
         const auto reg = new value::IRRegister(targetName);
         insertPoint->addInstruction(
-            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::ITOP, source, targetType, reg));
+            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::INTTOPTR, source, targetType, reg));
         return reg;
     }
 
@@ -541,7 +541,7 @@ namespace lg::ir
     {
         const auto reg = new value::IRRegister(targetName);
         insertPoint->addInstruction(
-            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::PTOI, source, targetType, reg));
+            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::PTRTOINT, source, targetType, reg));
         return reg;
     }
 
@@ -556,7 +556,7 @@ namespace lg::ir
     {
         const auto reg = new value::IRRegister(targetName);
         insertPoint->addInstruction(
-            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::PTOP, source, targetType, reg));
+            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::PTRTOPTR, source, targetType, reg));
         return reg;
     }
 

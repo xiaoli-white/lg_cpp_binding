@@ -1056,16 +1056,16 @@ namespace lg::ir
                 return "sext";
             case Kind::TRUNC:
                 return "trunc";
-            case Kind::FTOI:
-                return "ftoi";
-            case Kind::ITOF:
-                return "itof";
-            case Kind::ITOP:
-                return "itop";
-            case Kind::PTOI:
-                return "ptoi";
-            case Kind::PTOP:
-                return "ptop";
+            case Kind::FTOINT:
+                return "ftoint";
+            case Kind::INTTOF:
+                return "inttof";
+            case Kind::INTTOPTR:
+                return "inttoptr";
+            case Kind::PTRTOINT:
+                return "ptrtoint";
+            case Kind::PTRTOPTR:
+                return "ptrtoptr";
             case Kind::FEXT:
                 return "fext";
             case Kind::FTRUNC:

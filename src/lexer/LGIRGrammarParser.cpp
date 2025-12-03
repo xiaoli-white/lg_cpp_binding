@@ -75,8 +75,8 @@ void lgirgrammarParserInitialize() {
       "'return'", "'getelementptr'", "'cmp'", "'conditional_jump'", "'phi'", 
       "'switch'", "'inc'", "'dec'", "'not'", "'neg'", "'add'", "'sub'", 
       "'mul'", "'div'", "'mod'", "'and'", "'or'", "'xor'", "'shl'", "'shr'", 
-      "'ushr'", "'zext'", "'sext'", "'trunc'", "'itof'", "'ftoi'", "'itop'", 
-      "'ptoi'", "'ptop'", "'fext'", "'ftrunc'", "'funcref'", "'globalref'", 
+      "'ushr'", "'zext'", "'sext'", "'trunc'", "'inttof'", "'ftoint'", "'inttoptr'", 
+      "'ptrtoint'", "'ptrtoptr'", "'fext'", "'ftrunc'", "'funcref'", "'globalref'", 
       "'localref'", "'constant'", "'label'", "'string'", "'...'", "'*'"
     },
     std::vector<std::string>{
@@ -87,10 +87,10 @@ void lgirgrammarParserInitialize() {
       "GOTO", "INVOKE", "RETURN", "GETELEMENTPTR", "CMP", "CONDITIONAL_JUMP", 
       "PHI", "SWITCH", "INC", "DEC", "NOT", "NEG", "ADD", "SUB", "MUL", 
       "DIV", "MOD", "AND", "OR", "XOR", "SHL", "SHR", "USHR", "ZEXT", "SEXT", 
-      "TRUNC", "ITOF", "FTOI", "ITOP", "PTOI", "PTOP", "FEXT", "FTRUNC", 
-      "FUNCREF", "GLOBALREF", "LOCALREF", "CONSTANT", "LABEL", "STRING", 
-      "ELLIPSIS", "MULTIPLY", "INT_NUMBER", "DECIMAL_NUMBER", "WS", "STRING_LITERAL", 
-      "IDENTIFIER"
+      "TRUNC", "INTTOF", "FTOINT", "INTTOPTR", "PTRTOINT", "PTRTOPTR", "FEXT", 
+      "FTRUNC", "FUNCREF", "GLOBALREF", "LOCALREF", "CONSTANT", "LABEL", 
+      "STRING", "ELLIPSIS", "MULTIPLY", "INT_NUMBER", "DECIMAL_NUMBER", 
+      "WS", "STRING_LITERAL", "IDENTIFIER"
     }
   );
   static const int32_t serializedATNSegment[] = {
@@ -5275,24 +5275,24 @@ tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::TRUNC() {
   return getToken(LGIRGrammarParser::TRUNC, 0);
 }
 
-tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::ITOF() {
-  return getToken(LGIRGrammarParser::ITOF, 0);
+tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::INTTOF() {
+  return getToken(LGIRGrammarParser::INTTOF, 0);
 }
 
-tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::FTOI() {
-  return getToken(LGIRGrammarParser::FTOI, 0);
+tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::FTOINT() {
+  return getToken(LGIRGrammarParser::FTOINT, 0);
 }
 
-tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::ITOP() {
-  return getToken(LGIRGrammarParser::ITOP, 0);
+tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::INTTOPTR() {
+  return getToken(LGIRGrammarParser::INTTOPTR, 0);
 }
 
-tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::PTOI() {
-  return getToken(LGIRGrammarParser::PTOI, 0);
+tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::PTRTOINT() {
+  return getToken(LGIRGrammarParser::PTRTOINT, 0);
 }
 
-tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::PTOP() {
-  return getToken(LGIRGrammarParser::PTOP, 0);
+tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::PTRTOPTR() {
+  return getToken(LGIRGrammarParser::PTRTOPTR, 0);
 }
 
 tree::TerminalNode* LGIRGrammarParser::TypeCastKindContext::FEXT() {

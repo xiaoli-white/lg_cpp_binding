@@ -698,11 +698,11 @@ namespace lg::ir
                 ZEXT,
                 SEXT,
                 TRUNC,
-                FTOI,
-                ITOF,
-                ITOP,
-                PTOI,
-                PTOP,
+                FTOINT,
+                INTTOF,
+                INTTOPTR,
+                PTRTOINT,
+                PTRTOPTR,
                 FEXT,
                 FTRUNC
             };
