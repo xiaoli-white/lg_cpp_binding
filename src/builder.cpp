@@ -595,7 +595,20 @@ namespace lg::ir
     {
         return createFloatTrunc(source, targetType, allocateRegisterName());
     }
+    value::IRRegister* IRBuilder::createBitCast(value::IRValue* source, type::IRType* targetType,
+                                                       const std::string& targetName) const
+    {
+        const auto reg = new value::IRRegister(targetName);
+        insertPoint->addInstruction(
+            new instruction::IRTypeCast(instruction::IRTypeCast::Kind::BITCAST, source, targetType, reg));
+        return reg;
+    }
 
+
+    value::IRRegister* IRBuilder::createBitCast(value::IRValue* source, type::IRType* targetType) const
+    {
+        return createBitCast(source, targetType, allocateRegisterName());
+    }
     value::IRRegister* IRBuilder::createInvoke(function::IRFunction* function, std::vector<value::IRValue*> args,
                                                const std::string& targetName) const
     {

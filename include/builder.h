@@ -134,6 +134,9 @@ namespace lg::ir
         value::IRRegister* createFloatTrunc(value::IRValue* source, type::IRType* targetType,
                                             const std::string& targetName) const;
         value::IRRegister* createFloatTrunc(value::IRValue* source, type::IRType* targetType) const;
+        value::IRRegister* createBitCast(value::IRValue* source, type::IRType* targetType,
+                                             const std::string& targetName) const;
+        value::IRRegister* createBitCast(value::IRValue* source, type::IRType* targetType) const;
         value::IRRegister* createInvoke(function::IRFunction* function, std::vector<value::IRValue*> args,
                                         const std::string& targetName) const;
         value::IRRegister* createInvoke(function::IRFunction* function, std::vector<value::IRValue*> args) const;
