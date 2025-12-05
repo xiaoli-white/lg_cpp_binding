@@ -571,7 +571,7 @@ namespace lg::ir
 
             IRStringConstant::IRStringConstant(IRModule* module, std::string value) : value(std::move(value))
             {
-                type = type::IRArrayType::get(module, type::IRIntegerType::getUnsignedInt8Type(), value.size() + 1);
+                type = type::IRArrayType::get(module, type::IRIntegerType::getUnsignedInt8Type(), value.length() + 1);
             }
 
             type::IRType* IRStringConstant::getType()
