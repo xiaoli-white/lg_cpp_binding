@@ -472,7 +472,9 @@ namespace lg::ir
             private:
                 friend class function::IRFunction;
 
-                explicit IRFunctionReference(function::IRFunction* function);
+                type::IRFunctionReferenceType* type;
+
+                IRFunctionReference(IRModule* module, function::IRFunction* function);
 
             public:
                 function::IRFunction* function;
@@ -520,11 +522,11 @@ namespace lg::ir
             std::vector<IRLocalVariable*> locals;
             base::IRControlFlowGraph* cfg;
             uint64_t registerCount = 0;
-            IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+            IRFunction(IRModule* module, std::vector<std::string> attributes, type::IRType* returnType,
                        std::string name,
                        std::vector<IRLocalVariable*> args, bool isVarArg, std::vector<IRLocalVariable*> locals,
                        base::IRControlFlowGraph* cfg);
-            IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+            IRFunction(IRModule* module, std::vector<std::string> attributes, type::IRType* returnType,
                        std::string name,
                        std::vector<IRLocalVariable*> args, bool isVarArg);
             ~IRFunction() override;

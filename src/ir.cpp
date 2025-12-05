@@ -658,13 +658,18 @@ namespace lg::ir
                 return instance;
             }
 
-            IRFunctionReference::IRFunctionReference(function::IRFunction* function) : function(function)
+            IRFunctionReference::IRFunctionReference(IRModule* module, function::IRFunction* function) : function(
+                function)
             {
+                std::vector<type::IRType*> parameterTypes;
+                for (const auto& arg : function->args)parameterTypes.push_back(arg->type);
+                type = type::IRFunctionReferenceType::get(module, function->returnType, parameterTypes,
+                                                          function->isVarArg);
             }
 
             type::IRType* IRFunctionReference::getType()
             {
-                return function->returnType;
+                return type;
             }
 
             std::any IRFunctionReference::accept(IRVisitor* visitor, std::any additional)
@@ -712,7 +717,7 @@ namespace lg::ir
 
     namespace function
     {
-        IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+        IRFunction::IRFunction(IRModule* module, std::vector<std::string> attributes, type::IRType* returnType,
                                std::string name,
                                std::vector<IRLocalVariable*> args, bool isVarArg, std::vector<IRLocalVariable*> locals,
                                base::IRControlFlowGraph* cfg) : attributes(std::move(attributes)),
@@ -725,12 +730,12 @@ namespace lg::ir
             if (cfg != nullptr) cfg->function = this;
             for (const auto& arg : args) name2LocalVariable[arg->name] = arg;
             if (!isExtern) for (const auto& local : locals) name2LocalVariable[local->name] = local;
-            reference = new value::constant::IRFunctionReference(this);
+            reference = new value::constant::IRFunctionReference(module, this);
         }
 
-        IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+        IRFunction::IRFunction(IRModule* module, std::vector<std::string> attributes, type::IRType* returnType,
                                std::string name,
-                               std::vector<IRLocalVariable*> args, bool isVarArg) : IRFunction(
+                               std::vector<IRLocalVariable*> args, bool isVarArg) : IRFunction(module,
             std::move(attributes), returnType, std::move(name), std::move(args), isVarArg, {}, nullptr)
         {
         }

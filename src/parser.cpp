@@ -65,18 +65,17 @@ namespace lg::ir::parser
             function::IRFunction* function;
             if (func->EXTERN())
             {
-                function = new function::IRFunction(std::move(attributes), returnType, func->IDENTIFIER()->getText(),
-                                                    args, func->ELLIPSIS() != nullptr);
+                function = new function::IRFunction(module, std::move(attributes), returnType,
+                                                    func->IDENTIFIER()->getText(), args, func->ELLIPSIS() != nullptr);
             }
             else
             {
                 visit(func->localVariables(1));
                 const auto locals = std::any_cast<std::vector<function::IRLocalVariable*>>(stack.top());
                 stack.pop();
-                function = new function::IRFunction(std::move(attributes), returnType,
-                                                    func->IDENTIFIER()->getText(),
-                                                    args, func->ELLIPSIS() != nullptr, locals,
-                                                    new base::IRControlFlowGraph());
+                function = new function::IRFunction(module, std::move(attributes), returnType,
+                                                    func->IDENTIFIER()->getText(), args, func->ELLIPSIS() != nullptr,
+                                                    locals, new base::IRControlFlowGraph());
             }
             module->putFunction(function);
         }
