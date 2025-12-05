@@ -22,7 +22,7 @@ namespace lg::ir::parser
                 attributes.emplace_back(parseAttribute(attribute));
             }
             module->putStructure(
-                new structure::IRStructure(std::move(attributes), structure->IDENTIFIER()->getText(), {}));
+                new structure::IRStructure(std::move(attributes), parseIDENTIFIER(structure->IDENTIFIER()), {}));
         }
         for (const auto& globalVariable : context->globalVariable())
         {
@@ -38,13 +38,14 @@ namespace lg::ir::parser
                 stack.pop();
                 module->putGlobalVariable(new base::IRGlobalVariable(module, std::move(attributes),
                                                                      globalVariable->CONST() != nullptr,
-                                                                     globalVariable->IDENTIFIER()->getText(), type));
+                                                                     parseIDENTIFIER(globalVariable->IDENTIFIER()),
+                                                                     type));
             }
             else
             {
                 module->putGlobalVariable(new base::IRGlobalVariable(module, std::move(attributes),
                                                                      globalVariable->CONST() != nullptr,
-                                                                     globalVariable->IDENTIFIER()->getText(),
+                                                                     parseIDENTIFIER(globalVariable->IDENTIFIER()),
                                                                      static_cast<value::constant::IRConstant*>(
                                                                          nullptr)));
             }
@@ -66,7 +67,8 @@ namespace lg::ir::parser
             if (func->EXTERN())
             {
                 function = new function::IRFunction(module, std::move(attributes), returnType,
-                                                    func->IDENTIFIER()->getText(), args, func->ELLIPSIS() != nullptr);
+                                                    parseIDENTIFIER(func->IDENTIFIER()), args,
+                                                    func->ELLIPSIS() != nullptr);
             }
             else
             {
@@ -74,7 +76,8 @@ namespace lg::ir::parser
                 const auto locals = std::any_cast<std::vector<function::IRLocalVariable*>>(stack.top());
                 stack.pop();
                 function = new function::IRFunction(module, std::move(attributes), returnType,
-                                                    func->IDENTIFIER()->getText(), args, func->ELLIPSIS() != nullptr,
+                                                    parseIDENTIFIER(func->IDENTIFIER()), args,
+                                                    func->ELLIPSIS() != nullptr,
                                                     locals, new base::IRControlFlowGraph());
             }
             module->putFunction(function);
@@ -93,7 +96,7 @@ namespace lg::ir::parser
             auto* value = std::any_cast<value::IRValue*>(stack.top());
             auto* constant = dynamic_cast<value::constant::IRConstant*>(value);
             if (constant == nullptr) throw std::runtime_error("Initializer must be a constant");
-            module->getGlobalVariable(context->IDENTIFIER()->getText())->setInitializer(constant);
+            module->getGlobalVariable(parseIDENTIFIER(context->IDENTIFIER()))->setInitializer(constant);
         }
         return nullptr;
     }
@@ -103,7 +106,7 @@ namespace lg::ir::parser
         visit(context->fields());
         auto fields = std::any_cast<std::vector<structure::IRField*>>(stack.top());
         stack.pop();
-        structure::IRStructure* structure = module->getStructure(context->IDENTIFIER()->getText());
+        structure::IRStructure* structure = module->getStructure(parseIDENTIFIER(context->IDENTIFIER()));
         structure->fields = std::move(fields);
         return nullptr;
     }
@@ -126,18 +129,18 @@ namespace lg::ir::parser
         visit(context->type());
         auto* type = std::any_cast<type::IRType*>(stack.top());
         stack.pop();
-        stack.emplace(new structure::IRField(type, context->IDENTIFIER()->getText()));
+        stack.emplace(new structure::IRField(type, parseIDENTIFIER(context->IDENTIFIER())));
         return nullptr;
     }
 
     std::any parser::visitFunction(LGIRGrammarParser::FunctionContext* context)
     {
-        currentFunction = module->getFunction(context->IDENTIFIER()->getText());
+        currentFunction = module->getFunction(parseIDENTIFIER(context->IDENTIFIER()));
         if (!context->EXTERN())
         {
             for (auto* basicBlock : context->basicBlock())
             {
-                auto* block = new base::IRBasicBlock(basicBlock->IDENTIFIER()->getText());
+                auto* block = new base::IRBasicBlock(parseIDENTIFIER(basicBlock->IDENTIFIER()));
                 currentFunction->addBasicBlock(block);
             }
             for (auto* basicBlock : context->basicBlock())visit(basicBlock);
@@ -148,7 +151,7 @@ namespace lg::ir::parser
 
     std::any parser::visitBasicBlock(LGIRGrammarParser::BasicBlockContext* context)
     {
-        auto* block = currentFunction->getBasicBlock(context->IDENTIFIER()->getText());
+        auto* block = currentFunction->getBasicBlock(parseIDENTIFIER(context->IDENTIFIER()));
         builder.setInsertPoint(block);
         for (auto* statement : context->statement())
         {
@@ -175,7 +178,7 @@ namespace lg::ir::parser
         visit(context->type());
         auto* type = std::any_cast<type::IRType*>(stack.top());
         stack.pop();
-        stack.emplace(new function::IRLocalVariable(module, type, context->IDENTIFIER()->getText()));
+        stack.emplace(new function::IRLocalVariable(module, type, parseIDENTIFIER(context->IDENTIFIER())));
         return nullptr;
     }
 
@@ -432,7 +435,7 @@ namespace lg::ir::parser
         visit(context->value());
         auto* value = std::any_cast<value::IRValue*>(stack.top());
         stack.pop();
-        auto* basicBlock = currentFunction->getBasicBlock(context->label()->IDENTIFIER()->getText());
+        auto* basicBlock = currentFunction->getBasicBlock(parseIDENTIFIER(context->label()->IDENTIFIER()));
         std::unordered_map<value::constant::IRIntegerConstant*, base::IRBasicBlock*> cases;
         for (const auto& case_ : context->switchCase())
         {
@@ -447,7 +450,7 @@ namespace lg::ir::parser
 
     std::any parser::visitPhiValue(LGIRGrammarParser::PhiValueContext* context)
     {
-        auto* basicBlock = currentFunction->getBasicBlock(context->label()->IDENTIFIER()->getText());
+        auto* basicBlock = currentFunction->getBasicBlock(parseIDENTIFIER(context->label()->IDENTIFIER()));
         visit(context->value());
         auto* value = std::any_cast<value::IRValue*>(stack.top());
         stack.pop();
@@ -463,7 +466,7 @@ namespace lg::ir::parser
         stack.pop();
         auto* constant = dynamic_cast<value::constant::IRIntegerConstant*>(value);
         if (constant == nullptr) throw std::runtime_error("phi value must be integer constant");
-        auto* basicBlock = currentFunction->getBasicBlock(context->label()->IDENTIFIER()->getText());
+        auto* basicBlock = currentFunction->getBasicBlock(parseIDENTIFIER(context->label()->IDENTIFIER()));
         stack.emplace(std::make_any<std::pair<value::constant::IRIntegerConstant*, base::IRBasicBlock*>>(
             std::make_pair(constant, basicBlock)));
         return nullptr;
@@ -498,21 +501,21 @@ namespace lg::ir::parser
 
     std::any parser::visitFunctionReference(LGIRGrammarParser::FunctionReferenceContext* context)
     {
-        auto* func = module->getFunction(context->IDENTIFIER()->getText());
+        auto* func = module->getFunction(parseIDENTIFIER(context->IDENTIFIER()));
         stack.emplace(std::make_any<value::IRValue*>(value::constant::IRFunctionReference::get(func)));
         return nullptr;
     }
 
     std::any parser::visitGlobalReference(LGIRGrammarParser::GlobalReferenceContext* context)
     {
-        auto* global = module->getGlobalVariable(context->IDENTIFIER()->getText());
+        auto* global = module->getGlobalVariable(parseIDENTIFIER(context->IDENTIFIER()));
         stack.emplace(std::make_any<value::IRValue*>(value::constant::IRGlobalVariableReference::get(global)));
         return nullptr;
     }
 
     std::any parser::visitLocalReference(LGIRGrammarParser::LocalReferenceContext* context)
     {
-        auto* local = currentFunction->getLocalVariable(context->IDENTIFIER()->getText());
+        auto* local = currentFunction->getLocalVariable(parseIDENTIFIER(context->IDENTIFIER()));
         stack.emplace(std::make_any<value::IRValue*>(value::IRLocalVariableReference::get(local)));
         return nullptr;
     }
@@ -598,7 +601,7 @@ namespace lg::ir::parser
 
     std::any parser::visitStringConstant(LGIRGrammarParser::StringConstantContext* context)
     {
-        const auto text = context->STRING_LITERAL()->getText();
+        const auto text = parseStringLiteral(context->STRING_LITERAL());
         stack.emplace(
             std::make_any<value::IRValue*>(
                 value::constant::IRStringConstant::get(module, text.substr(1, text.size() - 2))));
@@ -705,7 +708,7 @@ namespace lg::ir::parser
 
     std::any parser::visitStructureType(LGIRGrammarParser::StructureTypeContext* context)
     {
-        auto* structure = module->getStructure(context->IDENTIFIER()->getText());
+        auto* structure = module->getStructure(parseIDENTIFIER(context->IDENTIFIER()));
         stack.emplace(std::make_any<type::IRType*>(type::IRStructureType::get(structure)));
         return nullptr;
     }
@@ -734,7 +737,7 @@ namespace lg::ir::parser
 
     std::any parser::visitLabel(LGIRGrammarParser::LabelContext* context)
     {
-        stack.emplace(currentFunction->getBasicBlock(context->IDENTIFIER()->getText()));
+        stack.emplace(currentFunction->getBasicBlock(parseIDENTIFIER(context->IDENTIFIER())));
         return nullptr;
     }
 
@@ -797,14 +800,27 @@ namespace lg::ir::parser
 
     std::string parser::getTargetRegisterName(LGIRGrammarParser::RegisterNameContext* context)
     {
-        if (context->IDENTIFIER()) return context->IDENTIFIER()->getText();
+        if (context->IDENTIFIER()) return parseIDENTIFIER(context->IDENTIFIER());
         if (context->INT_NUMBER()) return context->INT_NUMBER()->getText();
         throw std::runtime_error("Invalid register name: " + context->getText());
     }
 
+    std::string parser::parseIDENTIFIER(antlr4::tree::TerminalNode* node)
+    {
+        std::string text = node->getText();
+        if (text.starts_with("\"") && text.ends_with("\""))text = text.substr(1, text.size() - 2);
+        return text;
+    }
+
+    std::string parser::parseStringLiteral(antlr4::tree::TerminalNode* node)
+    {
+        const std::string text = node->getText();
+        return text.substr(1, text.size() - 2);
+    }
+
     std::string parser::parseAttribute(LGIRGrammarParser::AttributeContext* context)
     {
-        std::string s = context->STRING_LITERAL()->getText();
+        std::string s = parseStringLiteral(context->STRING_LITERAL());
         return s.substr(1, s.size() - 2);
     }
 
