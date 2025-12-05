@@ -21,7 +21,8 @@ namespace lg::ir
                                            std::string name,
                                            value::constant::IRConstant* initializer) :
             attributes(std::move(attributes)), isExtern(false),
-            isConstant(isConstant), type(initializer->getType()), name(std::move(name)), initializer(initializer)
+            isConstant(isConstant), type(initializer != nullptr ? initializer->getType() : nullptr),
+            name(std::move(name)), initializer(initializer)
         {
             reference = new value::constant::IRGlobalVariableReference(module, this);
         }
