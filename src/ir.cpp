@@ -29,6 +29,8 @@ namespace lg::ir
         {
         }
 
+        IRGlobalVariable::~IRGlobalVariable() = default;
+
         std::any IRGlobalVariable::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitGlobalVariable(this, std::move(additional));
@@ -36,8 +38,14 @@ namespace lg::ir
 
         std::string IRGlobalVariable::toString()
         {
-            return std::string(isExtern ? "extern " : "") + std::string(isConstant ? "constant " : "") + "global " +
-                name + (isExtern ? ": " + type->toString() : " = " + initializer->toString());
+            std::string s;
+            for (const auto& attribute : attributes)s += "__attribute__(\"" + attribute + "\") ";
+            if (isExtern) s += "extern ";
+            if (isConstant) s += "constant ";
+            s += "global " + name;
+            if (isExtern) s += ": " + type->toString();
+            else s += " = " + initializer->toString();
+            return s;
         }
 
         void IRGlobalVariable::setInitializer(value::constant::IRConstant* initializer)
@@ -46,6 +54,10 @@ namespace lg::ir
             type = initializer->getType();
         }
 
+        IRControlFlowGraph::~IRControlFlowGraph()
+        {
+            for (const auto& basicBlock : basicBlocks | std::views::values)delete basicBlock;
+        }
 
         std::string IRControlFlowGraph::toString()
         {
@@ -60,6 +72,11 @@ namespace lg::ir
 
         IRBasicBlock::IRBasicBlock(std::string name) : name(std::move(name))
         {
+        }
+
+        IRBasicBlock::~IRBasicBlock()
+        {
+            for (const auto& instruction : instructions)delete instruction;
         }
 
         std::string IRBasicBlock::toString()
@@ -625,6 +642,14 @@ namespace lg::ir
         {
         }
 
+        IRFunction::~IRFunction()
+        {
+            for (const auto& local : args) delete local;
+            for (const auto& local : locals) delete local;
+            delete cfg;
+        }
+
+
         std::any IRFunction::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitFunction(this, std::move(additional));
@@ -655,6 +680,8 @@ namespace lg::ir
         {
         }
 
+        IRLocalVariable::~IRLocalVariable() = default;
+
         std::any IRLocalVariable::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitLocalVariable(this, std::move(additional));
@@ -672,6 +699,12 @@ namespace lg::ir
             attributes(std::move(attributes)), name(std::move(name)), fields(std::move(fields))
         {
         }
+
+        IRStructure::~IRStructure()
+        {
+            for (const auto& field : fields) delete field;
+        }
+
 
         std::any IRStructure::accept(IRVisitor* visitor, std::any additional)
         {
@@ -779,6 +812,12 @@ namespace lg::ir
             target->type = operand->getType();
         }
 
+        IRUnaryOperates::~IRUnaryOperates()
+        {
+            delete target;
+        }
+
+
         std::any IRUnaryOperates::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitUnaryOperates(this, std::move(additional));
@@ -832,6 +871,11 @@ namespace lg::ir
             target->type = type::IRPointerType::get(ty);
         }
 
+        IRGetElementPointer::~IRGetElementPointer()
+        {
+            delete target;
+        }
+
         std::any IRGetElementPointer::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitGetElementPointer(this, std::move(additional));
@@ -853,6 +897,11 @@ namespace lg::ir
         {
             target->def = this;
             target->type = type::IRIntegerType::getBooleanType();
+        }
+
+        IRCompare::~IRCompare()
+        {
+            delete target;
         }
 
         std::any IRCompare::accept(IRVisitor* visitor, std::any additional)
@@ -915,6 +964,11 @@ namespace lg::ir
             }
         }
 
+        IRInvoke::~IRInvoke()
+        {
+            delete target;
+        }
+
         std::any IRInvoke::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitInvoke(this, std::move(additional));
@@ -964,6 +1018,11 @@ namespace lg::ir
             target->type = dynamic_cast<type::IRPointerType*>(ptr->getType())->base;
         }
 
+        IRLoad::~IRLoad()
+        {
+            delete target;
+        }
+
         std::any IRLoad::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitLoad(this, std::move(additional));
@@ -1004,6 +1063,11 @@ namespace lg::ir
             target->type = value->getType();
         }
 
+        IRSetRegister::~IRSetRegister()
+        {
+            delete target;
+        }
+
         std::any IRSetRegister::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitSetRegister(this, std::move(additional));
@@ -1021,6 +1085,11 @@ namespace lg::ir
             target->type = type::IRPointerType::get(type);
         }
 
+        IRStackAllocate::~IRStackAllocate()
+        {
+            delete target;
+        }
+
         std::any IRStackAllocate::accept(IRVisitor* visitor, std::any additional)
         {
             return visitor->visitStackAllocate(this, std::move(additional));
@@ -1029,8 +1098,8 @@ namespace lg::ir
         std::string IRStackAllocate::toString()
         {
             return "%" + target->name + " = stack_alloc " + type->toString() + (size != nullptr
-                ? ", " + size->toString()
-                : "");
+                    ? ", " + size->toString()
+                    : "");
         }
 
         IRTypeCast::IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType, value::IRRegister* target) :
@@ -1038,6 +1107,11 @@ namespace lg::ir
         {
             target->def = this;
             target->type = targetType;
+        }
+
+        IRTypeCast::~IRTypeCast()
+        {
+            delete target;
         }
 
         std::any IRTypeCast::accept(IRVisitor* visitor, std::any additional)
@@ -1088,6 +1162,12 @@ namespace lg::ir
             target->def = this;
             target->type = values.begin()->second->getType();
         }
+
+        IRPhi::~IRPhi()
+        {
+            delete target;
+        }
+
 
         std::any IRPhi::accept(IRVisitor* visitor, std::any additional)
         {
@@ -1466,6 +1546,13 @@ namespace lg::ir
             visit(constant, additional);
         }
         return nullptr;
+    }
+
+    IRModule::~IRModule()
+    {
+        for (const auto& global : globals | std::views::values) delete global;
+        for (const auto& structure : structures | std::views::values) delete structure;
+        for (const auto& function : functions | std::views::values) delete function;
     }
 
     std::any IRModule::accept(IRVisitor* visitor, std::any additional)

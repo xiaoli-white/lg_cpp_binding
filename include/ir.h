@@ -119,6 +119,7 @@ namespace lg::ir
                              value::constant::IRConstant* initializer);
             IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, value::constant::IRConstant* initializer);
             IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, type::IRType* type);
+            ~IRGlobalVariable() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             void setInitializer(value::constant::IRConstant* initializer);
@@ -131,8 +132,9 @@ namespace lg::ir
             std::map<std::string, IRBasicBlock*> basicBlocks;
             std::map<IRBasicBlock*, std::vector<IRBasicBlock*>> predecessors;
             std::map<IRBasicBlock*, std::vector<IRBasicBlock*>> successors;
-            std::string toString();
 
+            ~IRControlFlowGraph();
+            std::string toString();
             void addBasicBlock(IRBasicBlock* basicBlock);
         };
 
@@ -143,6 +145,7 @@ namespace lg::ir
             std::string name;
             std::vector<instruction::IRInstruction*> instructions{};
             explicit IRBasicBlock(std::string name);
+            ~IRBasicBlock();
             std::string toString();
 
             void addInstruction(instruction::IRInstruction* instruction);
@@ -461,6 +464,7 @@ namespace lg::ir
                        base::IRControlFlowGraph* cfg);
             IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
                        std::vector<IRLocalVariable*> args);
+            ~IRFunction() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
 
@@ -475,6 +479,7 @@ namespace lg::ir
             type::IRType* type;
             std::string name;
             IRLocalVariable(type::IRType* type, std::string name);
+            ~IRLocalVariable() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -489,6 +494,7 @@ namespace lg::ir
             std::string name;
             std::vector<IRField*> fields;
             IRStructure(std::vector<std::string> attributes, std::string name, std::vector<IRField*> fields);
+            ~IRStructure() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -565,6 +571,7 @@ namespace lg::ir
             value::IRValue* operand;
             value::IRRegister* target;
             IRUnaryOperates(Operator op, value::IRValue* operand, value::IRRegister* target);
+            ~IRUnaryOperates() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             static std::string operatorToString(Operator op);
@@ -578,6 +585,7 @@ namespace lg::ir
             value::IRRegister* target;
             IRGetElementPointer(value::IRValue* pointer, std::vector<value::constant::IRIntegerConstant*> indices,
                                 value::IRRegister* target);
+            ~IRGetElementPointer() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -591,6 +599,7 @@ namespace lg::ir
             value::IRRegister* target;
             IRCompare(base::IRCondition condition, value::IRValue* operand1, value::IRValue* operand2,
                       value::IRRegister* target);
+            ~IRCompare() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -628,6 +637,7 @@ namespace lg::ir
             IRInvoke(type::IRType* returnType, value::IRValue* func,
                      std::vector<value::IRValue*> arguments,
                      value::IRRegister* target);
+            ~IRInvoke() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -648,6 +658,7 @@ namespace lg::ir
             value::IRValue* ptr;
             value::IRRegister* target;
             IRLoad(value::IRValue* ptr, value::IRRegister* target);
+            ~IRLoad() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -676,6 +687,7 @@ namespace lg::ir
             value::IRValue* value;
             value::IRRegister* target;
             IRSetRegister(value::IRValue* value, value::IRRegister* target);
+            ~IRSetRegister() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -687,6 +699,7 @@ namespace lg::ir
             value::IRValue* size;
             value::IRRegister* target;
             IRStackAllocate(type::IRType* type, value::IRValue* size, value::IRRegister* target);
+            ~IRStackAllocate() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -715,6 +728,7 @@ namespace lg::ir
             value::IRRegister* target;
             IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType,
                        value::IRRegister* target);
+            ~IRTypeCast() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             static std::string kindToString(Kind kind);
@@ -726,6 +740,7 @@ namespace lg::ir
             std::unordered_map<base::IRBasicBlock*, value::IRValue*> values;
             value::IRRegister* target;
             IRPhi(std::unordered_map<base::IRBasicBlock*, value::IRValue*> values, value::IRRegister* target);
+            ~IRPhi() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
         };
@@ -808,7 +823,7 @@ namespace lg::ir
         std::map<std::string, structure::IRStructure*> structures;
         std::map<std::string, function::IRFunction*> functions;
 
-        ~IRModule() override = default;
+        ~IRModule() override;
         std::any accept(IRVisitor* visitor, std::any additional) override;
         std::string toString() override;
 

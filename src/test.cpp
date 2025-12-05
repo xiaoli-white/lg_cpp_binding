@@ -20,8 +20,9 @@ int main(int argc, char* argv[])
                     "\tinvoke void i32 %1()"
                     "\treturn i32 %1"
                     "}";
-    auto module = lg::ir::parser::parse(c);
+    auto* module = lg::ir::parser::parse(c);
     lg::ir::IRDumper dumper;
     dumper.visitModule(module, std::string(""));
+    delete module;
     return 0;
 }
