@@ -982,7 +982,7 @@ namespace lg::ir
         IRGetElementPointer::IRGetElementPointer(IRModule* module, value::IRValue* pointer,
                                                  std::vector<value::constant::IRIntegerConstant*> indices,
                                                  value::IRRegister* target) : pointer(pointer),
-                                                                              indices(std::move(indices)),
+                                                                              indices(indices),
                                                                               target(target)
         {
             target->def = this;
