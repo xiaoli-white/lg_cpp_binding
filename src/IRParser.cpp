@@ -8,7 +8,7 @@
 
 namespace lg::ir::parser
 {
-    IRParser::IRParser(IRModule* module) : module(module)
+    IRParser::IRParser(IRModule* module) : module(module), builder(module)
     {
     }
 
@@ -21,7 +21,8 @@ namespace lg::ir::parser
             {
                 attributes.emplace_back(parseAttribute(attribute));
             }
-            module->putStructure(new structure::IRStructure(std::move(attributes), structure->IDENTIFIER()->getText(), {}));
+            module->putStructure(
+                new structure::IRStructure(std::move(attributes), structure->IDENTIFIER()->getText(), {}));
         }
         for (const auto& globalVariable : context->globalVariable())
         {
@@ -35,13 +36,13 @@ namespace lg::ir::parser
                 visit(globalVariable->type());
                 auto* type = std::any_cast<type::IRType*>(stack.top());
                 stack.pop();
-                module->putGlobalVariable(new base::IRGlobalVariable(std::move(attributes),
+                module->putGlobalVariable(new base::IRGlobalVariable(module, std::move(attributes),
                                                                      globalVariable->CONST() != nullptr,
                                                                      globalVariable->IDENTIFIER()->getText(), type));
             }
             else
             {
-                module->putGlobalVariable(new base::IRGlobalVariable(std::move(attributes),
+                module->putGlobalVariable(new base::IRGlobalVariable(module, std::move(attributes),
                                                                      globalVariable->CONST() != nullptr,
                                                                      globalVariable->IDENTIFIER()->getText(),
                                                                      static_cast<value::constant::IRConstant*>(
@@ -65,15 +66,17 @@ namespace lg::ir::parser
             if (func->EXTERN())
             {
                 function = new function::IRFunction(std::move(attributes), returnType, func->IDENTIFIER()->getText(),
-                                                    args);
+                                                    args, func->ELLIPSIS() != nullptr);
             }
             else
             {
                 visit(func->localVariables(1));
                 const auto locals = std::any_cast<std::vector<function::IRLocalVariable*>>(stack.top());
                 stack.pop();
-                function = new function::IRFunction(std::move(attributes), returnType, func->IDENTIFIER()->getText(),
-                                                    args, locals, new base::IRControlFlowGraph());
+                function = new function::IRFunction(std::move(attributes), returnType,
+                                                    func->IDENTIFIER()->getText(),
+                                                    args, func->ELLIPSIS() != nullptr, locals,
+                                                    new base::IRControlFlowGraph());
             }
             module->putFunction(function);
         }
@@ -173,7 +176,7 @@ namespace lg::ir::parser
         visit(context->type());
         auto* type = std::any_cast<type::IRType*>(stack.top());
         stack.pop();
-        stack.emplace(new function::IRLocalVariable(type, context->IDENTIFIER()->getText()));
+        stack.emplace(new function::IRLocalVariable(module, type, context->IDENTIFIER()->getText()));
         return nullptr;
     }
 
@@ -497,21 +500,21 @@ namespace lg::ir::parser
     std::any IRParser::visitFunctionReference(LGIRGrammarParser::FunctionReferenceContext* context)
     {
         auto* func = module->getFunction(context->IDENTIFIER()->getText());
-        stack.emplace(std::make_any<value::IRValue*>(new value::constant::IRFunctionReference(func)));
+        stack.emplace(std::make_any<value::IRValue*>(value::constant::IRFunctionReference::get(func)));
         return nullptr;
     }
 
     std::any IRParser::visitGlobalReference(LGIRGrammarParser::GlobalReferenceContext* context)
     {
         auto* global = module->getGlobalVariable(context->IDENTIFIER()->getText());
-        stack.emplace(std::make_any<value::IRValue*>(new value::constant::IRGlobalVariableReference(global)));
+        stack.emplace(std::make_any<value::IRValue*>(value::constant::IRGlobalVariableReference::get(global)));
         return nullptr;
     }
 
     std::any IRParser::visitLocalReference(LGIRGrammarParser::LocalReferenceContext* context)
     {
         auto* local = currentFunction->getLocalVariable(context->IDENTIFIER()->getText());
-        stack.emplace(std::make_any<value::IRValue*>(new value::IRLocalVariableReference(local)));
+        stack.emplace(std::make_any<value::IRValue*>(value::IRLocalVariableReference::get(local)));
         return nullptr;
     }
 
@@ -536,7 +539,7 @@ namespace lg::ir::parser
         auto* type = dynamic_cast<type::IRIntegerType*>(std::any_cast<type::IRType*>(stack.top()));
         stack.pop();
         stack.emplace(
-            std::make_any<value::IRValue*>(new value::constant::IRIntegerConstant(
+            std::make_any<value::IRValue*>(value::constant::IRIntegerConstant::get(module,
                 type, std::stoll(context->INT_NUMBER()->getText()))));
         return nullptr;
     }
@@ -549,12 +552,12 @@ namespace lg::ir::parser
         if (dynamic_cast<type::IRFloatType*>(type) != nullptr)
         {
             stack.push(std::make_any<value::IRValue*>(
-                new value::constant::IRFloatConstant(std::stof(context->DECIMAL_NUMBER()->getText()))));
+                value::constant::IRFloatConstant::get(module, std::stof(context->DECIMAL_NUMBER()->getText()))));
         }
         else if (dynamic_cast<type::IRDoubleType*>(type) != nullptr)
         {
             stack.push(std::make_any<value::IRValue*>(
-                new value::constant::IRDoubleConstant(std::stod(context->DECIMAL_NUMBER()->getText()))));
+                value::constant::IRDoubleConstant::get(module, std::stod(context->DECIMAL_NUMBER()->getText()))));
         }
         else
         {
@@ -573,8 +576,9 @@ namespace lg::ir::parser
         visit(context->constants());
         auto elements = std::any_cast<std::vector<value::constant::IRConstant*>>(stack.top());
         stack.pop();
-        stack.emplace(std::make_any<value::IRValue*>(
-            new value::constant::IRArrayConstant(arrayType, std::move(elements))));
+        stack.emplace(
+            std::make_any<value::IRValue*>(
+                value::constant::IRArrayConstant::get(module, arrayType, std::move(elements))));
         return nullptr;
     }
 
@@ -589,15 +593,16 @@ namespace lg::ir::parser
         auto elements = std::any_cast<std::vector<value::constant::IRConstant*>>(stack.top());
         stack.pop();
         stack.emplace(std::make_any<value::IRValue*>(
-            new value::constant::IRStructureInitializer(structureType, std::move(elements))));
+            value::constant::IRStructureInitializer::get(module, structureType, std::move(elements))));
         return nullptr;
     }
 
     std::any IRParser::visitStringConstant(LGIRGrammarParser::StringConstantContext* context)
     {
         const auto text = context->STRING_LITERAL()->getText();
-        stack.emplace(std::make_any<value::IRValue*>(
-            new value::constant::IRStringConstant(text.substr(1, text.size() - 2))));
+        stack.emplace(
+            std::make_any<value::IRValue*>(
+                value::constant::IRStringConstant::get(module, text.substr(1, text.size() - 2))));
         return nullptr;
     }
 
@@ -622,7 +627,7 @@ namespace lg::ir::parser
         stack.pop();
         for (size_t i = 0; i < context->MULTIPLY().size(); ++i)
         {
-            type = type::IRPointerType::get(type);
+            type = type::IRPointerType::get(module, type);
         }
         stack.emplace(std::make_any<type::IRType*>(type));
         return nullptr;
@@ -694,7 +699,8 @@ namespace lg::ir::parser
         auto* base = std::any_cast<type::IRType*>(stack.top());
         stack.pop();
         stack.emplace(
-            std::make_any<type::IRType*>(type::IRArrayType::get(base, std::stoll(context->INT_NUMBER()->getText()))));
+            std::make_any<type::IRType*>(
+                type::IRArrayType::get(module, base, std::stoll(context->INT_NUMBER()->getText()))));
         return nullptr;
     }
 
@@ -715,7 +721,8 @@ namespace lg::ir::parser
         stack.pop();
         const bool isVarArg = (context->ELLIPSIS() != nullptr);
         stack.emplace(
-            std::make_any<type::IRType*>(type::IRFunctionReferenceType::get(returnType, std::move(types), isVarArg)));
+            std::make_any<type::IRType*>(
+                type::IRFunctionReferenceType::get(module, returnType, std::move(types), isVarArg)));
         return nullptr;
     }
 

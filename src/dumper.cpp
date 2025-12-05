@@ -47,8 +47,9 @@ namespace lg::ir
         for (int i = 0; i < irFunction->args.size(); ++i)
         {
             out << irFunction->args[i]->toString();
-            if (i < irFunction->args.size() - 1) out << ", ";
+            if (irFunction->isVarArg || (i != irFunction->args.size() - 1)) out << ", ";
         }
+        if (irFunction->isVarArg) out << "...";
         out << ")";
         if (irFunction->isExtern)
         {

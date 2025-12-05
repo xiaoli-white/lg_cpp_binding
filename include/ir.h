@@ -108,6 +108,9 @@ namespace lg::ir
 
         class IRGlobalVariable final : public IRNode
         {
+        private:
+            value::constant::IRGlobalVariableReference* reference;
+
         public:
             std::vector<std::string> attributes;
             bool isExtern;
@@ -115,14 +118,19 @@ namespace lg::ir
             type::IRType* type;
             std::string name;
             value::constant::IRConstant* initializer = nullptr;
-            IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, type::IRType* type,
+            IRGlobalVariable(IRModule* module, std::vector<std::string> attributes, bool isConstant, std::string name,
+                             type::IRType* type,
                              value::constant::IRConstant* initializer);
-            IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, value::constant::IRConstant* initializer);
-            IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, type::IRType* type);
+            IRGlobalVariable(IRModule* module, std::vector<std::string> attributes, bool isConstant, std::string name,
+                             value::constant::IRConstant* initializer);
+            IRGlobalVariable(IRModule* module, std::vector<std::string> attributes, bool isConstant, std::string name,
+                             type::IRType* type);
             ~IRGlobalVariable() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             void setInitializer(value::constant::IRConstant* initializer);
+
+            [[nodiscard]] value::constant::IRGlobalVariableReference* getReference() const;
         };
 
         class IRControlFlowGraph final
@@ -239,6 +247,8 @@ namespace lg::ir
         class IRStructureType final : public IRType
         {
         private:
+            friend class structure::IRStructure;
+
             explicit IRStructureType(structure::IRStructure* structure);
 
         public:
@@ -247,7 +257,7 @@ namespace lg::ir
             std::string toString() override;
             bool operator==(const IRType& other) override;
 
-            static IRStructureType* get(structure::IRStructure* structure);
+            static IRStructureType* get(const structure::IRStructure* structure);
         };
 
         class IRArrayType final : public IRType
@@ -262,7 +272,7 @@ namespace lg::ir
             std::string toString() override;
             bool operator==(const IRType& other) override;
 
-            static IRArrayType* get(IRType* base, uint64_t size);
+            static IRArrayType* get(IRModule* module, IRType* base, uint64_t size);
         };
 
         class IRPointerType final : public IRType
@@ -276,7 +286,7 @@ namespace lg::ir
             std::string toString() override;
             bool operator==(const IRType& other) override;
 
-            static IRPointerType* get(IRType* base);
+            static IRPointerType* get(IRModule* module, IRType* base);
         };
 
         class IRVoidType final : public IRType
@@ -305,7 +315,8 @@ namespace lg::ir
             std::string toString() override;
             bool operator==(const IRType& other) override;
 
-            static IRFunctionReferenceType* get(IRType* returnType, std::vector<IRType*> parameterTypes, bool isVarArg);
+            static IRFunctionReferenceType* get(IRModule* module, IRType* returnType,
+                                                std::vector<IRType*> parameterTypes, bool isVarArg);
         };
     }
 
@@ -331,13 +342,19 @@ namespace lg::ir
 
         class IRLocalVariableReference final : public IRValue
         {
+        private:
+            friend class function::IRLocalVariable;
+
+            IRLocalVariableReference(IRModule* module, function::IRLocalVariable* variable);
+
         public:
             type::IRType* type;
             function::IRLocalVariable* variable;
-            explicit IRLocalVariableReference(function::IRLocalVariable* variable);
             type::IRType* getType() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+
+            static IRLocalVariableReference* get(function::IRLocalVariable* variable);
         };
 
         namespace constant
@@ -348,97 +365,139 @@ namespace lg::ir
 
             class IRIntegerConstant final : public IRConstant
             {
+            private:
+                IRIntegerConstant(type::IRIntegerType* type, uint64_t value);
+
             public:
                 type::IRIntegerType* type;
                 uint64_t value;
-                IRIntegerConstant(type::IRIntegerType* type, uint64_t value);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRIntegerConstant* get(IRModule* module, type::IRIntegerType* type, uint64_t value);
             };
 
             class IRFloatConstant final : public IRConstant
             {
+            private:
+                explicit IRFloatConstant(float value);
+
             public:
                 float value;
-                explicit IRFloatConstant(float value);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRFloatConstant* get(IRModule* module, float value);
             };
 
             class IRDoubleConstant final : public IRConstant
             {
+            private:
+                explicit IRDoubleConstant(double value);
+
             public:
                 double value;
-                explicit IRDoubleConstant(double value);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRDoubleConstant* get(IRModule* module, double value);
             };
 
             class IRArrayConstant final : public IRConstant
             {
+            private:
+                IRArrayConstant(type::IRArrayType* type, std::vector<IRConstant*> elements);
+
             public:
                 type::IRArrayType* type;
                 std::vector<IRConstant*> elements;
-                IRArrayConstant(type::IRArrayType* type, std::vector<IRConstant*> elements);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRArrayConstant* get(IRModule* module, type::IRArrayType* type,
+                                            std::vector<IRConstant*> elements);
             };
 
             class IRStringConstant final : public IRConstant
             {
+            private:
+                IRStringConstant(IRModule* module, std::string value);
+
             public:
                 type::IRType* type;
                 std::string value;
-                explicit IRStringConstant(std::string value);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRStringConstant* get(IRModule* module, std::string value);
             };
 
             class IRNullptrConstant final : public IRConstant
             {
+            private:
+                explicit IRNullptrConstant(type::IRPointerType* type);
+
             public:
                 type::IRPointerType* type;
-                explicit IRNullptrConstant(type::IRPointerType* type);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRNullptrConstant* get(IRModule* module, type::IRPointerType* type);
             };
 
             class IRStructureInitializer final : public IRConstant
             {
+            private:
+                IRStructureInitializer(type::IRStructureType* type, std::vector<IRConstant*> elements);
+
             public:
                 type::IRStructureType* type;
                 std::vector<IRConstant*> elements;
-                IRStructureInitializer(type::IRStructureType* type, std::vector<IRConstant*> elements);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRStructureInitializer* get(IRModule* module, type::IRStructureType* type,
+                                                   std::vector<IRConstant*> elements);
             };
 
             class IRFunctionReference final : public IRValue
             {
+            private:
+                friend class function::IRFunction;
+
+                explicit IRFunctionReference(function::IRFunction* function);
+
             public:
                 function::IRFunction* function;
-                explicit IRFunctionReference(function::IRFunction* function);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRFunctionReference* get(const function::IRFunction* function);
             };
 
             class IRGlobalVariableReference final : public IRValue
             {
+            private:
+                friend class base::IRGlobalVariable;
+
+                IRGlobalVariableReference(IRModule* module, base::IRGlobalVariable* variable);
+
             public:
                 type::IRType* type;
                 base::IRGlobalVariable* variable;
-                explicit IRGlobalVariableReference(base::IRGlobalVariable* variable);
                 type::IRType* getType() override;
                 std::any accept(IRVisitor* visitor, std::any additional) override;
                 std::string toString() override;
+
+                static IRGlobalVariableReference* get(const base::IRGlobalVariable* variable);
             };
         }
     }
@@ -449,6 +508,7 @@ namespace lg::ir
         {
         private:
             std::unordered_map<std::string, IRLocalVariable*> name2LocalVariable;
+            value::constant::IRFunctionReference* reference;
 
         public:
             std::vector<std::string> attributes;
@@ -456,14 +516,17 @@ namespace lg::ir
             type::IRType* returnType;
             std::string name;
             std::vector<IRLocalVariable*> args;
+            bool isVarArg;
             std::vector<IRLocalVariable*> locals;
             base::IRControlFlowGraph* cfg;
             uint64_t registerCount = 0;
-            IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
-                       std::vector<IRLocalVariable*> args, std::vector<IRLocalVariable*> locals,
+            IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+                       std::string name,
+                       std::vector<IRLocalVariable*> args, bool isVarArg, std::vector<IRLocalVariable*> locals,
                        base::IRControlFlowGraph* cfg);
-            IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
-                       std::vector<IRLocalVariable*> args);
+            IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+                       std::string name,
+                       std::vector<IRLocalVariable*> args, bool isVarArg);
             ~IRFunction() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
@@ -471,17 +534,24 @@ namespace lg::ir
             void addBasicBlock(base::IRBasicBlock* basicBlock) const;
             [[nodiscard]] base::IRBasicBlock* getBasicBlock(const std::string& name) const;
             IRLocalVariable* getLocalVariable(const std::string& name);
+
+            value::constant::IRFunctionReference* getReference() const;
         };
 
         class IRLocalVariable final : public base::IRNode
         {
+        private:
+            value::IRLocalVariableReference* reference;
+
         public:
             type::IRType* type;
             std::string name;
-            IRLocalVariable(type::IRType* type, std::string name);
+            IRLocalVariable(IRModule* module, type::IRType* type, std::string name);
             ~IRLocalVariable() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+
+            [[nodiscard]] value::IRLocalVariableReference* getReference() const;
         };
     }
 
@@ -489,6 +559,9 @@ namespace lg::ir
     {
         class IRStructure final : public base::IRNode
         {
+        private:
+            type::IRStructureType* type;
+
         public:
             std::vector<std::string> attributes;
             std::string name;
@@ -497,6 +570,8 @@ namespace lg::ir
             ~IRStructure() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
+
+            [[nodiscard]] type::IRStructureType* getType() const;
         };
 
         class IRField final : public base::IRNode
@@ -551,6 +626,7 @@ namespace lg::ir
             value::IRRegister* target;
             IRBinaryOperates(Operator op, value::IRValue* operand1, value::IRValue* operand2,
                              value::IRRegister* target);
+            ~IRBinaryOperates() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             static std::string operatorToString(Operator op);
@@ -583,7 +659,8 @@ namespace lg::ir
             value::IRValue* pointer;
             std::vector<value::constant::IRIntegerConstant*> indices;
             value::IRRegister* target;
-            IRGetElementPointer(value::IRValue* pointer, std::vector<value::constant::IRIntegerConstant*> indices,
+            IRGetElementPointer(IRModule* module, value::IRValue* pointer,
+                                std::vector<value::constant::IRIntegerConstant*> indices,
                                 value::IRRegister* target);
             ~IRGetElementPointer() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
@@ -698,7 +775,7 @@ namespace lg::ir
             type::IRType* type;
             value::IRValue* size;
             value::IRRegister* target;
-            IRStackAllocate(type::IRType* type, value::IRValue* size, value::IRRegister* target);
+            IRStackAllocate(IRModule* module, type::IRType* type, value::IRValue* size, value::IRRegister* target);
             ~IRStackAllocate() override;
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
@@ -822,6 +899,16 @@ namespace lg::ir
         std::map<std::string, base::IRGlobalVariable*> globals;
         std::map<std::string, structure::IRStructure*> structures;
         std::map<std::string, function::IRFunction*> functions;
+        std::unordered_map<type::IRIntegerType*, std::map<uint64_t,
+                                                          value::constant::IRIntegerConstant*>> integerConstants;
+        std::unordered_map<double, value::constant::IRFloatConstant*> floatConstants;
+        std::unordered_map<double, value::constant::IRDoubleConstant*> doubleConstants;
+        std::unordered_map<std::string, value::constant::IRStringConstant*> stringConstants;
+        std::unordered_map<type::IRType*, value::constant::IRNullptrConstant*> nullptrConstants;
+        std::vector<value::IRValue*> anotherValues;
+        std::map<std::pair<type::IRType*, uint64_t>, type::IRArrayType*> arrayTypes;
+        std::unordered_map<type::IRType*, type::IRPointerType*> pointerTypes;
+        std::vector<type::IRType*> anotherTypes;
 
         ~IRModule() override;
         std::any accept(IRVisitor* visitor, std::any additional) override;

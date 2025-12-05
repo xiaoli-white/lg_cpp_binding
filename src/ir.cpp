@@ -7,29 +7,38 @@ namespace lg::ir
 {
     namespace base
     {
-        IRGlobalVariable::IRGlobalVariable(std::vector<std::string> attributes, bool isConstant, std::string name,
+        IRGlobalVariable::IRGlobalVariable(IRModule* module, std::vector<std::string> attributes, bool isConstant,
+                                           std::string name,
                                            type::IRType* type,
                                            value::constant::IRConstant* initializer) :
             attributes(std::move(attributes)), isExtern(false),
             isConstant(isConstant), type(type), name(std::move(name)), initializer(initializer)
         {
+            reference = new value::constant::IRGlobalVariableReference(module, this);
         }
 
-        IRGlobalVariable::IRGlobalVariable(std::vector<std::string> attributes, bool isConstant, std::string name,
+        IRGlobalVariable::IRGlobalVariable(IRModule* module, std::vector<std::string> attributes, bool isConstant,
+                                           std::string name,
                                            value::constant::IRConstant* initializer) :
             attributes(std::move(attributes)), isExtern(false),
             isConstant(isConstant), type(initializer->getType()), name(std::move(name)), initializer(initializer)
         {
+            reference = new value::constant::IRGlobalVariableReference(module, this);
         }
 
-        IRGlobalVariable::IRGlobalVariable(std::vector<std::string> attributes, bool isConstant, std::string name,
+        IRGlobalVariable::IRGlobalVariable(IRModule* module, std::vector<std::string> attributes, bool isConstant,
+                                           std::string name,
                                            type::IRType* type) : attributes(std::move(attributes)), isExtern(false),
                                                                  isConstant(isConstant), type(type),
                                                                  name(std::move(name))
         {
+            reference = new value::constant::IRGlobalVariableReference(module, this);
         }
 
-        IRGlobalVariable::~IRGlobalVariable() = default;
+        IRGlobalVariable::~IRGlobalVariable()
+        {
+            delete reference;
+        }
 
         std::any IRGlobalVariable::accept(IRVisitor* visitor, std::any additional)
         {
@@ -52,6 +61,11 @@ namespace lg::ir
         {
             this->initializer = initializer;
             type = initializer->getType();
+        }
+
+        value::constant::IRGlobalVariableReference* IRGlobalVariable::getReference() const
+        {
+            return reference;
         }
 
         IRControlFlowGraph::~IRControlFlowGraph()
@@ -260,9 +274,9 @@ namespace lg::ir
             return false;
         }
 
-        IRStructureType* IRStructureType::get(structure::IRStructure* structure)
+        IRStructureType* IRStructureType::get(const structure::IRStructure* structure)
         {
-            return new IRStructureType(structure);
+            return structure->getType();
         }
 
         IRArrayType::IRArrayType(IRType* base, uint64_t size) : base(base), size(size)
@@ -286,9 +300,11 @@ namespace lg::ir
             return false;
         }
 
-        IRArrayType* IRArrayType::get(IRType* base, uint64_t size)
+        IRArrayType* IRArrayType::get(IRModule* module, IRType* base, uint64_t size)
         {
-            return new IRArrayType(base, size);
+            auto p = std::make_pair(base, size);
+            if (module->arrayTypes.contains(p)) return module->arrayTypes[p];
+            return module->arrayTypes[p] = new IRArrayType(base, size);
         }
 
         IRPointerType::IRPointerType(IRType* base) : base(base)
@@ -312,9 +328,10 @@ namespace lg::ir
             return false;
         }
 
-        IRPointerType* IRPointerType::get(IRType* base)
+        IRPointerType* IRPointerType::get(IRModule* module, IRType* base)
         {
-            return new IRPointerType(base);
+            if (module->pointerTypes.contains(base)) return module->pointerTypes[base];
+            return module->pointerTypes[base] = new IRPointerType(base);
         }
 
         std::any IRVoidType::accept(IRVisitor* visitor, std::any additional)
@@ -378,10 +395,13 @@ namespace lg::ir
             return false;
         }
 
-        IRFunctionReferenceType* IRFunctionReferenceType::get(IRType* returnType, std::vector<IRType*> parameterTypes,
+        IRFunctionReferenceType* IRFunctionReferenceType::get(IRModule* module, IRType* returnType,
+                                                              std::vector<IRType*> parameterTypes,
                                                               const bool isVarArg)
         {
-            return new IRFunctionReferenceType(returnType, std::move(parameterTypes), isVarArg);
+            auto* instance = new IRFunctionReferenceType(returnType, std::move(parameterTypes), isVarArg);
+            module->anotherTypes.push_back(instance);
+            return instance;
         }
     }
 
@@ -406,9 +426,10 @@ namespace lg::ir
             return type->toString() + " %" + name;
         }
 
-        IRLocalVariableReference::IRLocalVariableReference(function::IRLocalVariable* variable) : variable(variable)
+        IRLocalVariableReference::IRLocalVariableReference(IRModule* module,
+                                                           function::IRLocalVariable* variable) : variable(variable)
         {
-            type = type::IRPointerType::get(variable->type);
+            type = type::IRPointerType::get(module, variable->type);
         }
 
         type::IRType* IRLocalVariableReference::getType()
@@ -424,6 +445,11 @@ namespace lg::ir
         std::string IRLocalVariableReference::toString()
         {
             return "localref " + variable->name;
+        }
+
+        IRLocalVariableReference* IRLocalVariableReference::get(function::IRLocalVariable* variable)
+        {
+            return variable->getReference();
         }
 
         namespace constant
@@ -447,6 +473,13 @@ namespace lg::ir
                 return type->toString() + " " + std::to_string(value);
             }
 
+            IRIntegerConstant* IRIntegerConstant::get(IRModule* module, type::IRIntegerType* type, uint64_t value)
+            {
+                if (module->integerConstants.contains(type) && module->integerConstants[type].contains(value))
+                    return module->integerConstants[type][value];
+                return module->integerConstants[type][value] = new IRIntegerConstant(type, value);
+            }
+
             IRFloatConstant::IRFloatConstant(float value) : value(value)
             {
             }
@@ -466,6 +499,13 @@ namespace lg::ir
                 return "float " + std::to_string(value);
             }
 
+            IRFloatConstant* IRFloatConstant::get(IRModule* module, float value)
+            {
+                if (module->floatConstants.contains(value))
+                    return module->floatConstants[value];
+                return module->floatConstants[value] = new IRFloatConstant(value);
+            }
+
             IRDoubleConstant::IRDoubleConstant(double value) : value(value)
             {
             }
@@ -483,6 +523,13 @@ namespace lg::ir
             std::string IRDoubleConstant::toString()
             {
                 return "double " + std::to_string(value);
+            }
+
+            IRDoubleConstant* IRDoubleConstant::get(IRModule* module, double value)
+            {
+                if (module->doubleConstants.contains(value))
+                    return module->doubleConstants[value];
+                return module->doubleConstants[value] = new IRDoubleConstant(value);
             }
 
             IRArrayConstant::IRArrayConstant(type::IRArrayType* type,
@@ -513,9 +560,17 @@ namespace lg::ir
                 return result;
             }
 
-            IRStringConstant::IRStringConstant(std::string value) : value(std::move(value))
+            IRArrayConstant* IRArrayConstant::get(IRModule* module, type::IRArrayType* type,
+                                                  std::vector<IRConstant*> elements)
             {
-                type = type::IRPointerType::get(type::IRIntegerType::getUnsignedInt32Type());
+                auto* instance = new IRArrayConstant(type, std::move(elements));
+                module->anotherValues.push_back(instance);
+                return instance;
+            }
+
+            IRStringConstant::IRStringConstant(IRModule* module, std::string value) : value(std::move(value))
+            {
+                type = type::IRPointerType::get(module, type::IRIntegerType::getUnsignedInt32Type());
             }
 
             type::IRType* IRStringConstant::getType()
@@ -531,6 +586,13 @@ namespace lg::ir
             std::string IRStringConstant::toString()
             {
                 return "string \"" + value + "\"";
+            }
+
+            IRStringConstant* IRStringConstant::get(IRModule* module, std::string value)
+            {
+                if (module->stringConstants.contains(value))
+                    return module->stringConstants[value];
+                return module->stringConstants[value] = new IRStringConstant(module, std::move(value));
             }
 
             IRNullptrConstant::IRNullptrConstant(type::IRPointerType* type) : type(type)
@@ -550,6 +612,13 @@ namespace lg::ir
             std::string IRNullptrConstant::toString()
             {
                 return type->toString() + " nullptr";
+            }
+
+            IRNullptrConstant* IRNullptrConstant::get(IRModule* module, type::IRPointerType* type)
+            {
+                if (module->nullptrConstants.contains(type))
+                    return module->nullptrConstants[type];
+                return module->nullptrConstants[type] = new IRNullptrConstant(type);
             }
 
             IRStructureInitializer::IRStructureInitializer(type::IRStructureType* type,
@@ -580,6 +649,14 @@ namespace lg::ir
                 return s;
             }
 
+            IRStructureInitializer* IRStructureInitializer::get(IRModule* module, type::IRStructureType* type,
+                                                                std::vector<IRConstant*> elements)
+            {
+                auto* instance = new IRStructureInitializer(type, std::move(elements));
+                module->anotherValues.push_back(instance);
+                return instance;
+            }
+
             IRFunctionReference::IRFunctionReference(function::IRFunction* function) : function(function)
             {
             }
@@ -599,9 +676,15 @@ namespace lg::ir
                 return "funcref " + function->name;
             }
 
-            IRGlobalVariableReference::IRGlobalVariableReference(base::IRGlobalVariable* variable) : variable(variable)
+            IRFunctionReference* IRFunctionReference::get(const function::IRFunction* function)
             {
-                type = type::IRPointerType::get(variable->type);
+                return function->getReference();
+            }
+
+            IRGlobalVariableReference::IRGlobalVariableReference(IRModule* module,
+                                                                 base::IRGlobalVariable* variable) : variable(variable)
+            {
+                type = type::IRPointerType::get(module, variable->type);
             }
 
             type::IRType* IRGlobalVariableReference::getType()
@@ -618,27 +701,36 @@ namespace lg::ir
             {
                 return "globalref " + variable->name;
             }
+
+            IRGlobalVariableReference* IRGlobalVariableReference::get(const base::IRGlobalVariable* variable)
+            {
+                return variable->getReference();
+            }
         }
     }
 
     namespace function
     {
-        IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
-                               std::vector<IRLocalVariable*> args, std::vector<IRLocalVariable*> locals,
+        IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+                               std::string name,
+                               std::vector<IRLocalVariable*> args, bool isVarArg, std::vector<IRLocalVariable*> locals,
                                base::IRControlFlowGraph* cfg) : attributes(std::move(attributes)),
                                                                 isExtern(cfg == nullptr),
                                                                 returnType(returnType), name(std::move(name)),
-                                                                args(std::move(args)), locals(std::move(locals)),
+                                                                args(std::move(args)), isVarArg(isVarArg),
+                                                                locals(std::move(locals)),
                                                                 cfg(cfg)
         {
             if (cfg != nullptr) cfg->function = this;
             for (const auto& arg : args) name2LocalVariable[arg->name] = arg;
             if (!isExtern) for (const auto& local : locals) name2LocalVariable[local->name] = local;
+            reference = new value::constant::IRFunctionReference(this);
         }
 
-        IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType, std::string name,
-                               std::vector<IRLocalVariable*> args) : IRFunction(
-            std::move(attributes), returnType, std::move(name), std::move(args), {}, nullptr)
+        IRFunction::IRFunction(std::vector<std::string> attributes, type::IRType* returnType,
+                               std::string name,
+                               std::vector<IRLocalVariable*> args, bool isVarArg) : IRFunction(
+            std::move(attributes), returnType, std::move(name), std::move(args), isVarArg, {}, nullptr)
         {
         }
 
@@ -647,6 +739,7 @@ namespace lg::ir
             for (const auto& local : args) delete local;
             for (const auto& local : locals) delete local;
             delete cfg;
+            delete reference;
         }
 
 
@@ -675,12 +768,21 @@ namespace lg::ir
             return name2LocalVariable[name];
         }
 
-
-        IRLocalVariable::IRLocalVariable(type::IRType* type, std::string name) : type(type), name(std::move(name))
+        value::constant::IRFunctionReference* IRFunction::getReference() const
         {
+            return reference;
         }
 
-        IRLocalVariable::~IRLocalVariable() = default;
+        IRLocalVariable::IRLocalVariable(IRModule* module, type::IRType* type,
+                                         std::string name) : type(type), name(std::move(name))
+        {
+            reference = new value::IRLocalVariableReference(module, this);
+        }
+
+        IRLocalVariable::~IRLocalVariable()
+        {
+            delete reference;
+        }
 
         std::any IRLocalVariable::accept(IRVisitor* visitor, std::any additional)
         {
@@ -691,6 +793,11 @@ namespace lg::ir
         {
             return type->toString() + " " + name;
         }
+
+        value::IRLocalVariableReference* IRLocalVariable::getReference() const
+        {
+            return reference;
+        }
     }
 
     namespace structure
@@ -698,13 +805,14 @@ namespace lg::ir
         IRStructure::IRStructure(std::vector<std::string> attributes, std::string name, std::vector<IRField*> fields) :
             attributes(std::move(attributes)), name(std::move(name)), fields(std::move(fields))
         {
+            type = new type::IRStructureType(this);
         }
 
         IRStructure::~IRStructure()
         {
             for (const auto& field : fields) delete field;
+            delete type;
         }
-
 
         std::any IRStructure::accept(IRVisitor* visitor, std::any additional)
         {
@@ -714,6 +822,11 @@ namespace lg::ir
         std::string IRStructure::toString()
         {
             return "structure";
+        }
+
+        type::IRStructureType* IRStructure::getType() const
+        {
+            return type;
         }
 
         IRField::IRField(type::IRType* type, std::string name) : type(type), name(std::move(name))
@@ -761,6 +874,11 @@ namespace lg::ir
         {
             target->def = this;
             target->type = operand1->getType();
+        }
+
+        IRBinaryOperates::~IRBinaryOperates()
+        {
+            delete target;
         }
 
         std::any IRBinaryOperates::accept(IRVisitor* visitor, std::any additional)
@@ -845,7 +963,7 @@ namespace lg::ir
             }
         }
 
-        IRGetElementPointer::IRGetElementPointer(value::IRValue* pointer,
+        IRGetElementPointer::IRGetElementPointer(IRModule* module, value::IRValue* pointer,
                                                  std::vector<value::constant::IRIntegerConstant*> indices,
                                                  value::IRRegister* target) : pointer(pointer),
                                                                               indices(std::move(indices)),
@@ -868,7 +986,7 @@ namespace lg::ir
                     ty = structureType->structure->fields[index->value]->type;
                 }
             }
-            target->type = type::IRPointerType::get(ty);
+            target->type = type::IRPointerType::get(module, ty);
         }
 
         IRGetElementPointer::~IRGetElementPointer()
@@ -1078,11 +1196,11 @@ namespace lg::ir
             return "%" + target->name + " = " + value->toString();
         }
 
-        IRStackAllocate::IRStackAllocate(type::IRType* type, value::IRValue* size,
+        IRStackAllocate::IRStackAllocate(IRModule* module, type::IRType* type, value::IRValue* size,
                                          value::IRRegister* target) : type(type), size(size), target(target)
         {
             target->def = this;
-            target->type = type::IRPointerType::get(type);
+            target->type = type::IRPointerType::get(module, type);
         }
 
         IRStackAllocate::~IRStackAllocate()
@@ -1098,8 +1216,8 @@ namespace lg::ir
         std::string IRStackAllocate::toString()
         {
             return "%" + target->name + " = stack_alloc " + type->toString() + (size != nullptr
-                    ? ", " + size->toString()
-                    : "");
+                ? ", " + size->toString()
+                : "");
         }
 
         IRTypeCast::IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType, value::IRRegister* target) :
@@ -1553,6 +1671,17 @@ namespace lg::ir
         for (const auto& global : globals | std::views::values) delete global;
         for (const auto& structure : structures | std::views::values) delete structure;
         for (const auto& function : functions | std::views::values) delete function;
+        for (const auto& m : integerConstants | std::views::values)
+            for (auto& constant : m | std::views::values)
+                delete constant;
+        for (const auto& constant : floatConstants | std::views::values) delete constant;
+        for (const auto& constant : doubleConstants | std::views::values) delete constant;
+        for (const auto& constant : stringConstants | std::views::values) delete constant;
+        for (const auto& constant : nullptrConstants | std::views::values) delete constant;
+        for (const auto& value : anotherValues) delete value;
+        for (const auto& arrayType : arrayTypes | std::views::values) delete arrayType;
+        for (const auto& pointerType : pointerTypes | std::views::values) delete pointerType;
+        for (const auto& type : anotherTypes) delete type;
     }
 
     std::any IRModule::accept(IRVisitor* visitor, std::any additional)

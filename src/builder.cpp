@@ -8,6 +8,10 @@
 
 namespace lg::ir
 {
+    IRBuilder::IRBuilder(IRModule* module) : module(module)
+    {
+    }
+
     void IRBuilder::setInsertPoint(base::IRBasicBlock* insertPoint)
     {
         this->insertPoint = insertPoint;
@@ -413,7 +417,7 @@ namespace lg::ir
                                                    const std::string& targetName) const
     {
         const auto reg = new value::IRRegister(targetName);
-        insertPoint->addInstruction(new instruction::IRStackAllocate(type, size, reg));
+        insertPoint->addInstruction(new instruction::IRStackAllocate(module, type, size, reg));
         return reg;
     }
 
@@ -595,8 +599,9 @@ namespace lg::ir
     {
         return createFloatTrunc(source, targetType, allocateRegisterName());
     }
+
     value::IRRegister* IRBuilder::createBitCast(value::IRValue* source, type::IRType* targetType,
-                                                       const std::string& targetName) const
+                                                const std::string& targetName) const
     {
         const auto reg = new value::IRRegister(targetName);
         insertPoint->addInstruction(
@@ -609,10 +614,12 @@ namespace lg::ir
     {
         return createBitCast(source, targetType, allocateRegisterName());
     }
+
     value::IRRegister* IRBuilder::createInvoke(function::IRFunction* function, std::vector<value::IRValue*> args,
                                                const std::string& targetName) const
     {
-        return createInvoke(function->returnType, new value::constant::IRFunctionReference(function), std::move(args),
+        return createInvoke(function->returnType, value::constant::IRFunctionReference::get(function),
+                            std::move(args),
                             targetName);
     }
 
@@ -624,7 +631,8 @@ namespace lg::ir
                               ? new value::IRRegister(allocateRegisterName())
                               : nullptr);
         insertPoint->addInstruction(
-            new instruction::IRInvoke(returnType, new value::constant::IRFunctionReference(function), std::move(args),
+            new instruction::IRInvoke(returnType, value::constant::IRFunctionReference::get(function),
+                                      std::move(args),
                                       reg));
         return reg;
     }
@@ -651,7 +659,7 @@ namespace lg::ir
                                                           const std::string& targetName) const
     {
         const auto reg = new value::IRRegister(targetName);
-        insertPoint->addInstruction(new instruction::IRGetElementPointer(ptr, std::move(indices), reg));
+        insertPoint->addInstruction(new instruction::IRGetElementPointer(module, ptr, std::move(indices), reg));
         return reg;
     }
 

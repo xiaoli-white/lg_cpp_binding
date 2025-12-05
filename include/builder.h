@@ -15,10 +15,11 @@ namespace lg::ir
     class IRBuilder
     {
     private:
+        IRModule* module;
         base::IRBasicBlock* insertPoint = nullptr;
 
     public:
-        IRBuilder() = default;
+        explicit IRBuilder(IRModule* module);
         void setInsertPoint(base::IRBasicBlock* insertPoint);
         [[nodiscard]] base::IRBasicBlock* getInsertPoint() const;
         void createReturn() const;
@@ -135,7 +136,7 @@ namespace lg::ir
                                             const std::string& targetName) const;
         value::IRRegister* createFloatTrunc(value::IRValue* source, type::IRType* targetType) const;
         value::IRRegister* createBitCast(value::IRValue* source, type::IRType* targetType,
-                                             const std::string& targetName) const;
+                                         const std::string& targetName) const;
         value::IRRegister* createBitCast(value::IRValue* source, type::IRType* targetType) const;
         value::IRRegister* createInvoke(function::IRFunction* function, std::vector<value::IRValue*> args,
                                         const std::string& targetName) const;

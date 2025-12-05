@@ -231,6 +231,7 @@ public:
     std::vector<AttributeContext *> attribute();
     AttributeContext* attribute(size_t i);
     antlr4::tree::TerminalNode *EXTERN();
+    antlr4::tree::TerminalNode *ELLIPSIS();
     std::vector<BasicBlockContext *> basicBlock();
     BasicBlockContext* basicBlock(size_t i);
 

@@ -6,7 +6,7 @@ globalVariable: attribute* EXTERN? CONST? GLOBAL IDENTIFIER ('=' constant)? (':'
 structure: attribute* STRUCTURE IDENTIFIER '{' fields '}';
 fields: field (',' field)* |;
 field: type IDENTIFIER;
-function: attribute* EXTERN? FUNCTION type IDENTIFIER '(' localVariables ')' ('{' localVariables '}' '{' (basicBlock)* '}')?;
+function: attribute* EXTERN? FUNCTION type IDENTIFIER '(' localVariables (',' ELLIPSIS)? ')' ('{' localVariables '}' '{' (basicBlock)* '}')?;
 localVariables: localVariable (',' localVariable)* |;
 localVariable: type IDENTIFIER;
 basicBlock: IDENTIFIER ':' (statement)*;
