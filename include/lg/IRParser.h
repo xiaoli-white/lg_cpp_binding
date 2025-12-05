@@ -6,10 +6,10 @@
 #ifndef LG_CPP_IRPARSER_H
 #define LG_CPP_IRPARSER_H
 
-#include <ir.h>
-#include <builder.h>
-#include <lexer/LGIRGrammarBaseVisitor.h>
-#include <lexer/LGIRGrammarParser.h>
+#include "ir.h"
+#include "builder.h"
+#include "lexer/LGIRGrammarBaseVisitor.h"
+#include "lexer/LGIRGrammarParser.h"
 
 #include "lexer/LGIRGrammarLexer.h"
 

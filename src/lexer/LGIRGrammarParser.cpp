@@ -2,10 +2,10 @@
 // Generated from LGIRGrammar.g4 by ANTLR 4.13.2
 
 
-#include "lexer/LGIRGrammarListener.h"
-#include "lexer/LGIRGrammarVisitor.h"
+#include "lg/lexer/LGIRGrammarListener.h"
+#include "lg/lexer/LGIRGrammarVisitor.h"
 
-#include "lexer/LGIRGrammarParser.h"
+#include "lg/lexer/LGIRGrammarParser.h"
 
 
 using namespace antlrcpp;

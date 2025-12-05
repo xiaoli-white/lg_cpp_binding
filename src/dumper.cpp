@@ -2,7 +2,7 @@
 // Created by xiaoli on 2025/11/24.
 //
 
-#include <dumper.h>
+#include <lg/dumper.h>
 #include <iostream>
 
 namespace lg::ir

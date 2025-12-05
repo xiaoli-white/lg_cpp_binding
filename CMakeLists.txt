@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.0)
-project(lg_cpp_binding)
+project(lg-cpp)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -12,23 +12,23 @@ add_library(lg SHARED
         src/lexer/LGIRGrammarListener.cpp
         src/lexer/LGIRGrammarLexer.cpp
         src/lexer/LGIRGrammarBaseListener.cpp
-        include/lexer/LGIRGrammarLexer.h
-        include/lexer/LGIRGrammarBaseListener.h
+        include/lg/lexer/LGIRGrammarLexer.h
+        include/lg/lexer/LGIRGrammarBaseListener.h
         src/ir.cpp
-        include/ir.h
-        include/builder.h
+        include/lg/ir.h
+        include/lg/builder.h
         src/builder.cpp
-        include/dumper.h
+        include/lg/dumper.h
         src/dumper.cpp
         src/IRParser.cpp
-        include/IRParser.h
+        include/lg/IRParser.h
         src/lexer/LGIRGrammarBaseVisitor.cpp
         src/lexer/LGIRGrammarVisitor.cpp
-        include/lexer/LGIRGrammarBaseVisitor.h
+        include/lg/lexer/LGIRGrammarBaseVisitor.h
 )
-add_executable(lg_cpp_binding_test
+add_executable(lg-cpp_test
         src/test.cpp
 )
 
 target_link_libraries(lg antlr4-runtime)
-target_link_libraries(lg_cpp_binding_test antlr4-runtime lg)
+target_link_libraries(lg-cpp_test lg)

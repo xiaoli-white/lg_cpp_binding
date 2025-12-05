@@ -1,10 +1,10 @@
 //
 // Created by xiaoli on 2025/11/24.
-//
+// include/
 
-#include <IRParser.h>
+#include <lg/IRParser.h>
 
-#include "dumper.h"
+#include <lg/dumper.h>
 
 namespace lg::ir::parser
 {

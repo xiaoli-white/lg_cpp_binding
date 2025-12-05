@@ -6,7 +6,7 @@
 #ifndef LG_CPP_BUILDER_H
 #define LG_CPP_BUILDER_H
 
-#include <ir.h>
+#include "ir.h"
 
 namespace lg::ir
 {

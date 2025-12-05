@@ -2,10 +2,10 @@
 // Created by xiaoli on 2025/11/25.
 //
 
-#include <dumper.h>
+#include <lg/dumper.h>
 #include <string>
 
-#include "IRParser.h"
+#include <lg/IRParser.h>
 
 int main(int argc, char* argv[])
 {

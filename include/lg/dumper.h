@@ -6,7 +6,7 @@
 #ifndef LG_CPP_DUMPER_H
 #define LG_CPP_DUMPER_H
 
-#include <ir.h>
+#include "ir.h"
 
 namespace lg::ir
 {

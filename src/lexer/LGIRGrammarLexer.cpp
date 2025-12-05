@@ -2,7 +2,7 @@
 // Generated from LGIRGrammar.g4 by ANTLR 4.13.2
 
 
-#include "lexer/LGIRGrammarLexer.h"
+#include "lg/lexer/LGIRGrammarLexer.h"
 
 
 using namespace antlr4;
