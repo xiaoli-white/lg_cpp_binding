@@ -571,7 +571,7 @@ namespace lg::ir
 
             IRStringConstant::IRStringConstant(IRModule* module, std::string value) : value(std::move(value))
             {
-                type = type::IRPointerType::get(module, type::IRIntegerType::getUnsignedInt32Type());
+                type = type::IRArrayType::get(module, type::IRIntegerType::getUnsignedInt8Type(), value.size() + 1);
             }
 
             type::IRType* IRStringConstant::getType()
@@ -1222,8 +1222,8 @@ namespace lg::ir
         std::string IRStackAllocate::toString()
         {
             return "%" + target->name + " = stack_alloc " + type->toString() + (size != nullptr
-                ? ", " + size->toString()
-                : "");
+                    ? ", " + size->toString()
+                    : "");
         }
 
         IRTypeCast::IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType, value::IRRegister* target) :
