@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#ifndef LG_CPP_IRPARSER_H
-#define LG_CPP_IRPARSER_H
+#ifndef LG_CPP_PARSER_H
+#define LG_CPP_PARSER_H
 
 #include "ir.h"
 #include "builder.h"
@@ -16,9 +16,9 @@
 
 namespace lg::ir::parser
 {
-    class IRParser;
+    class parser;
 
-    class IRParser final : public LGIRGrammarBaseVisitor
+    class parser final : public LGIRGrammarBaseVisitor
     {
     private:
         IRModule* module;
@@ -28,7 +28,7 @@ namespace lg::ir::parser
         std::unordered_map<std::string, value::IRRegister*> name2Register;
 
     public:
-        explicit IRParser(IRModule* module);
+        explicit parser(IRModule* module);
         std::any visitProgram(LGIRGrammarParser::ProgramContext* context) override;
         std::any visitGlobalVariable(LGIRGrammarParser::GlobalVariableContext* context) override;
         std::any visitStructure(LGIRGrammarParser::StructureContext* context) override;
@@ -94,4 +94,4 @@ namespace lg::ir::parser
     IRModule* parse(antlr4::ANTLRInputStream& stream);
 }
 
-#endif //LG_CPP_IRPARSER_H
+#endif //LG_CPP_PARSER_H

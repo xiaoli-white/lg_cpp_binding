@@ -5,7 +5,7 @@
 #include <lg/dumper.h>
 #include <string>
 
-#include <lg/IRParser.h>
+#include <lg/parser.h>
 
 int main(int argc, char* argv[])
 {

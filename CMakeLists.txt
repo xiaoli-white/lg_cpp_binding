@@ -20,8 +20,8 @@ add_library(lg SHARED
         src/builder.cpp
         include/lg/dumper.h
         src/dumper.cpp
-        src/IRParser.cpp
-        include/lg/IRParser.h
+        src/parser.cpp
+        include/lg/parser.h
         src/lexer/LGIRGrammarBaseVisitor.cpp
         src/lexer/LGIRGrammarVisitor.cpp
         include/lg/lexer/LGIRGrammarBaseVisitor.h

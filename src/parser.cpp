@@ -2,17 +2,17 @@
 // Created by xiaoli on 2025/11/24.
 // include/
 
-#include <lg/IRParser.h>
+#include <lg/parser.h>
 
 #include <lg/dumper.h>
 
 namespace lg::ir::parser
 {
-    IRParser::IRParser(IRModule* module) : module(module), builder(module)
+    parser::parser(IRModule* module) : module(module), builder(module)
     {
     }
 
-    std::any IRParser::visitProgram(LGIRGrammarParser::ProgramContext* context)
+    std::any parser::visitProgram(LGIRGrammarParser::ProgramContext* context)
     {
         for (const auto& structure : context->structure())
         {
@@ -86,7 +86,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitGlobalVariable(LGIRGrammarParser::GlobalVariableContext* context)
+    std::any parser::visitGlobalVariable(LGIRGrammarParser::GlobalVariableContext* context)
     {
         if (!context->EXTERN())
         {
@@ -99,7 +99,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitStructure(LGIRGrammarParser::StructureContext* context)
+    std::any parser::visitStructure(LGIRGrammarParser::StructureContext* context)
     {
         visit(context->fields());
         auto fields = std::any_cast<std::vector<structure::IRField*>>(stack.top());
@@ -109,7 +109,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitFields(LGIRGrammarParser::FieldsContext* context)
+    std::any parser::visitFields(LGIRGrammarParser::FieldsContext* context)
     {
         std::vector<structure::IRField*> fields;
         for (const auto& field : context->field())
@@ -122,7 +122,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitField(LGIRGrammarParser::FieldContext* context)
+    std::any parser::visitField(LGIRGrammarParser::FieldContext* context)
     {
         visit(context->type());
         auto* type = std::any_cast<type::IRType*>(stack.top());
@@ -131,7 +131,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitFunction(LGIRGrammarParser::FunctionContext* context)
+    std::any parser::visitFunction(LGIRGrammarParser::FunctionContext* context)
     {
         currentFunction = module->getFunction(context->IDENTIFIER()->getText());
         if (!context->EXTERN())
@@ -147,7 +147,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitBasicBlock(LGIRGrammarParser::BasicBlockContext* context)
+    std::any parser::visitBasicBlock(LGIRGrammarParser::BasicBlockContext* context)
     {
         auto* block = currentFunction->getBasicBlock(context->IDENTIFIER()->getText());
         builder.setInsertPoint(block);
@@ -158,7 +158,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitLocalVariables(LGIRGrammarParser::LocalVariablesContext* context)
+    std::any parser::visitLocalVariables(LGIRGrammarParser::LocalVariablesContext* context)
     {
         std::vector<function::IRLocalVariable*> fields;
         for (auto* localVariable : context->localVariable())
@@ -171,7 +171,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitLocalVariable(LGIRGrammarParser::LocalVariableContext* context)
+    std::any parser::visitLocalVariable(LGIRGrammarParser::LocalVariableContext* context)
     {
         visit(context->type());
         auto* type = std::any_cast<type::IRType*>(stack.top());
@@ -180,7 +180,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitAsm(LGIRGrammarParser::AsmContext* context)
+    std::any parser::visitAsm(LGIRGrammarParser::AsmContext* context)
     {
         visit(context->values());
         const auto values = std::any_cast<std::vector<value::IRValue*>>(stack.top());
@@ -192,7 +192,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitBinaryOperates(LGIRGrammarParser::BinaryOperatesContext* context)
+    std::any parser::visitBinaryOperates(LGIRGrammarParser::BinaryOperatesContext* context)
     {
         visit(context->value(0));
         auto* operand1 = std::any_cast<value::IRValue*>(stack.top());
@@ -208,7 +208,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitUnaryOperates(LGIRGrammarParser::UnaryOperatesContext* context)
+    std::any parser::visitUnaryOperates(LGIRGrammarParser::UnaryOperatesContext* context)
     {
         visit(context->value());
         auto* operand = std::any_cast<value::IRValue*>(stack.top());
@@ -221,7 +221,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitGetElementPointer(LGIRGrammarParser::GetElementPointerContext* context)
+    std::any parser::visitGetElementPointer(LGIRGrammarParser::GetElementPointerContext* context)
     {
         visit(context->value(0));
         auto* ptr = std::any_cast<value::IRValue*>(stack.top());
@@ -247,7 +247,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitCmp(LGIRGrammarParser::CmpContext* context)
+    std::any parser::visitCmp(LGIRGrammarParser::CmpContext* context)
     {
         const base::IRCondition condition = parseCondition(context->condition());
         visit(context->value(0));
@@ -263,7 +263,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitConditionalJump(LGIRGrammarParser::ConditionalJumpContext* context)
+    std::any parser::visitConditionalJump(LGIRGrammarParser::ConditionalJumpContext* context)
     {
         const base::IRCondition condition = parseCondition(context->condition());
         visit(context->value(0));
@@ -289,7 +289,7 @@ namespace lg::ir::parser
     }
 
 
-    std::any IRParser::visitGoto(LGIRGrammarParser::GotoContext* context)
+    std::any parser::visitGoto(LGIRGrammarParser::GotoContext* context)
     {
         visit(context->label());
         builder.createGoto(std::any_cast<base::IRBasicBlock*>(stack.top()));
@@ -297,7 +297,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitInvoke(LGIRGrammarParser::InvokeContext* context)
+    std::any parser::visitInvoke(LGIRGrammarParser::InvokeContext* context)
     {
         visit(context->type());
         auto* returnType = std::any_cast<type::IRType*>(stack.top());
@@ -318,7 +318,7 @@ namespace lg::ir::parser
     }
 
 
-    std::any IRParser::visitReturn(LGIRGrammarParser::ReturnContext* context)
+    std::any parser::visitReturn(LGIRGrammarParser::ReturnContext* context)
     {
         value::IRValue* value;
         if (context->value())
@@ -335,7 +335,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitLoad(LGIRGrammarParser::LoadContext* context)
+    std::any parser::visitLoad(LGIRGrammarParser::LoadContext* context)
     {
         visit(context->value());
         auto* ptr = std::any_cast<value::IRValue*>(stack.top());
@@ -346,7 +346,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitStore(LGIRGrammarParser::StoreContext* context)
+    std::any parser::visitStore(LGIRGrammarParser::StoreContext* context)
     {
         visit(context->value(0));
         auto* ptr = std::any_cast<value::IRValue*>(stack.top());
@@ -358,13 +358,13 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitNop(LGIRGrammarParser::NopContext* context)
+    std::any parser::visitNop(LGIRGrammarParser::NopContext* context)
     {
         builder.createNop();
         return nullptr;
     }
 
-    std::any IRParser::visitSetRegister(LGIRGrammarParser::SetRegisterContext* context)
+    std::any parser::visitSetRegister(LGIRGrammarParser::SetRegisterContext* context)
     {
         visit(context->value());
         auto* value = std::any_cast<value::IRValue*>(stack.top());
@@ -375,7 +375,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitStackAlloc(LGIRGrammarParser::StackAllocContext* context)
+    std::any parser::visitStackAlloc(LGIRGrammarParser::StackAllocContext* context)
     {
         visit(context->type());
         auto* type = std::any_cast<type::IRType*>(stack.top());
@@ -397,7 +397,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitTypeCast(LGIRGrammarParser::TypeCastContext* context)
+    std::any parser::visitTypeCast(LGIRGrammarParser::TypeCastContext* context)
     {
         visit(context->value());
         auto* source = std::any_cast<value::IRValue*>(stack.top());
@@ -413,7 +413,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitPhi(LGIRGrammarParser::PhiContext* context)
+    std::any parser::visitPhi(LGIRGrammarParser::PhiContext* context)
     {
         std::unordered_map<base::IRBasicBlock*, value::IRValue*> values;
         for (const auto& value : context->phiValue())
@@ -428,7 +428,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitSwitch(LGIRGrammarParser::SwitchContext* context)
+    std::any parser::visitSwitch(LGIRGrammarParser::SwitchContext* context)
     {
         visit(context->value());
         auto* value = std::any_cast<value::IRValue*>(stack.top());
@@ -446,7 +446,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitPhiValue(LGIRGrammarParser::PhiValueContext* context)
+    std::any parser::visitPhiValue(LGIRGrammarParser::PhiValueContext* context)
     {
         auto* basicBlock = currentFunction->getBasicBlock(context->label()->IDENTIFIER()->getText());
         visit(context->value());
@@ -457,7 +457,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitSwitchCase(LGIRGrammarParser::SwitchCaseContext* context)
+    std::any parser::visitSwitchCase(LGIRGrammarParser::SwitchCaseContext* context)
     {
         visit(context->integerConstant());
         auto* value = std::any_cast<value::IRValue*>(stack.top());
@@ -470,7 +470,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitValues(LGIRGrammarParser::ValuesContext* context)
+    std::any parser::visitValues(LGIRGrammarParser::ValuesContext* context)
     {
         std::vector<value::IRValue*> values;
         for (auto value : context->value())
@@ -483,7 +483,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitRegister(LGIRGrammarParser::RegisterContext* context)
+    std::any parser::visitRegister(LGIRGrammarParser::RegisterContext* context)
     {
         auto* reg = name2Register[getTargetRegisterName(context->registerName())];
         visit(context->type());
@@ -497,28 +497,28 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitFunctionReference(LGIRGrammarParser::FunctionReferenceContext* context)
+    std::any parser::visitFunctionReference(LGIRGrammarParser::FunctionReferenceContext* context)
     {
         auto* func = module->getFunction(context->IDENTIFIER()->getText());
         stack.emplace(std::make_any<value::IRValue*>(value::constant::IRFunctionReference::get(func)));
         return nullptr;
     }
 
-    std::any IRParser::visitGlobalReference(LGIRGrammarParser::GlobalReferenceContext* context)
+    std::any parser::visitGlobalReference(LGIRGrammarParser::GlobalReferenceContext* context)
     {
         auto* global = module->getGlobalVariable(context->IDENTIFIER()->getText());
         stack.emplace(std::make_any<value::IRValue*>(value::constant::IRGlobalVariableReference::get(global)));
         return nullptr;
     }
 
-    std::any IRParser::visitLocalReference(LGIRGrammarParser::LocalReferenceContext* context)
+    std::any parser::visitLocalReference(LGIRGrammarParser::LocalReferenceContext* context)
     {
         auto* local = currentFunction->getLocalVariable(context->IDENTIFIER()->getText());
         stack.emplace(std::make_any<value::IRValue*>(value::IRLocalVariableReference::get(local)));
         return nullptr;
     }
 
-    std::any IRParser::visitConstants(LGIRGrammarParser::ConstantsContext* context)
+    std::any parser::visitConstants(LGIRGrammarParser::ConstantsContext* context)
     {
         std::vector<value::constant::IRConstant*> constants;
         for (const auto& constant : context->constant())
@@ -533,7 +533,7 @@ namespace lg::ir::parser
     }
 
 
-    std::any IRParser::visitIntegerConstant(LGIRGrammarParser::IntegerConstantContext* context)
+    std::any parser::visitIntegerConstant(LGIRGrammarParser::IntegerConstantContext* context)
     {
         visit(context->integerType());
         auto* type = dynamic_cast<type::IRIntegerType*>(std::any_cast<type::IRType*>(stack.top()));
@@ -544,7 +544,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitDecimalConstant(LGIRGrammarParser::DecimalConstantContext* context)
+    std::any parser::visitDecimalConstant(LGIRGrammarParser::DecimalConstantContext* context)
     {
         visit(context->decimalType());
         auto* type = std::any_cast<type::IRType*>(stack.top());
@@ -566,7 +566,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitArrayConstant(LGIRGrammarParser::ArrayConstantContext* context)
+    std::any parser::visitArrayConstant(LGIRGrammarParser::ArrayConstantContext* context)
     {
         visit(context->arrayType());
         auto* type = std::any_cast<type::IRType*>(stack.top());
@@ -582,7 +582,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitStructureInitializer(LGIRGrammarParser::StructureInitializerContext* context)
+    std::any parser::visitStructureInitializer(LGIRGrammarParser::StructureInitializerContext* context)
     {
         visit(context->structureType());
         auto* type = std::any_cast<type::IRType*>(stack.top());
@@ -597,7 +597,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitStringConstant(LGIRGrammarParser::StringConstantContext* context)
+    std::any parser::visitStringConstant(LGIRGrammarParser::StringConstantContext* context)
     {
         const auto text = context->STRING_LITERAL()->getText();
         stack.emplace(
@@ -607,7 +607,7 @@ namespace lg::ir::parser
     }
 
 
-    std::any IRParser::visitTypes(LGIRGrammarParser::TypesContext* context)
+    std::any parser::visitTypes(LGIRGrammarParser::TypesContext* context)
     {
         std::vector<type::IRType*> types;
         for (const auto& type : context->type())
@@ -620,7 +620,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitType(LGIRGrammarParser::TypeContext* context)
+    std::any parser::visitType(LGIRGrammarParser::TypeContext* context)
     {
         visit(context->baseType());
         auto* type = std::any_cast<type::IRType*>(stack.top());
@@ -633,7 +633,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitIntegerType(LGIRGrammarParser::IntegerTypeContext* context)
+    std::any parser::visitIntegerType(LGIRGrammarParser::IntegerTypeContext* context)
     {
         if (context->I1())
         {
@@ -678,7 +678,7 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitDecimalType(LGIRGrammarParser::DecimalTypeContext* context)
+    std::any parser::visitDecimalType(LGIRGrammarParser::DecimalTypeContext* context)
     {
         if (context->FLOAT())
         {
@@ -693,7 +693,7 @@ namespace lg::ir::parser
         throw std::runtime_error("Invalid decimal type: " + context->getText());
     }
 
-    std::any IRParser::visitArrayType(LGIRGrammarParser::ArrayTypeContext* context)
+    std::any parser::visitArrayType(LGIRGrammarParser::ArrayTypeContext* context)
     {
         visit(context->type());
         auto* base = std::any_cast<type::IRType*>(stack.top());
@@ -704,14 +704,14 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitStructureType(LGIRGrammarParser::StructureTypeContext* context)
+    std::any parser::visitStructureType(LGIRGrammarParser::StructureTypeContext* context)
     {
         auto* structure = module->getStructure(context->IDENTIFIER()->getText());
         stack.emplace(std::make_any<type::IRType*>(type::IRStructureType::get(structure)));
         return nullptr;
     }
 
-    std::any IRParser::visitFunctionReferenceType(LGIRGrammarParser::FunctionReferenceTypeContext* context)
+    std::any parser::visitFunctionReferenceType(LGIRGrammarParser::FunctionReferenceTypeContext* context)
     {
         visit(context->types());
         auto types = std::any_cast<std::vector<type::IRType*>>(stack.top());
@@ -726,20 +726,20 @@ namespace lg::ir::parser
         return nullptr;
     }
 
-    std::any IRParser::visitVoidType(LGIRGrammarParser::VoidTypeContext* context)
+    std::any parser::visitVoidType(LGIRGrammarParser::VoidTypeContext* context)
     {
         stack.emplace(std::make_any<type::IRType*>(type::IRVoidType::get()));
         return nullptr;
     }
 
 
-    std::any IRParser::visitLabel(LGIRGrammarParser::LabelContext* context)
+    std::any parser::visitLabel(LGIRGrammarParser::LabelContext* context)
     {
         stack.emplace(currentFunction->getBasicBlock(context->IDENTIFIER()->getText()));
         return nullptr;
     }
 
-    instruction::IRBinaryOperates::Operator IRParser::parseBinaryOperator(
+    instruction::IRBinaryOperates::Operator parser::parseBinaryOperator(
         LGIRGrammarParser::BinaryOperatorContext* context)
     {
         if (context->ADD()) return instruction::IRBinaryOperates::Operator::ADD;
@@ -756,7 +756,7 @@ namespace lg::ir::parser
         throw std::runtime_error("Invalid binary operator: " + context->getText());
     }
 
-    instruction::IRUnaryOperates::Operator IRParser::parseUnaryOperator(
+    instruction::IRUnaryOperates::Operator parser::parseUnaryOperator(
         LGIRGrammarParser::UnaryOperatorContext* context)
     {
         if (context->INC()) return instruction::IRUnaryOperates::Operator::INC;
@@ -766,7 +766,7 @@ namespace lg::ir::parser
         throw std::runtime_error("Invalid unary operator: " + context->getText());
     }
 
-    base::IRCondition IRParser::parseCondition(LGIRGrammarParser::ConditionContext* context)
+    base::IRCondition parser::parseCondition(LGIRGrammarParser::ConditionContext* context)
     {
         const std::string text = context->getText();
         if (text == "if_true") return base::IRCondition::IF_TRUE;
@@ -780,7 +780,7 @@ namespace lg::ir::parser
         throw std::runtime_error("Invalid condition: " + text);
     }
 
-    instruction::IRTypeCast::Kind IRParser::parseTypeCastKind(LGIRGrammarParser::TypeCastKindContext* context)
+    instruction::IRTypeCast::Kind parser::parseTypeCastKind(LGIRGrammarParser::TypeCastKindContext* context)
     {
         if (context->ZEXT()) return instruction::IRTypeCast::Kind::ZEXT;
         if (context->SEXT()) return instruction::IRTypeCast::Kind::SEXT;
@@ -796,14 +796,14 @@ namespace lg::ir::parser
         throw std::runtime_error("Invalid type cast kind: " + context->getText());
     }
 
-    std::string IRParser::getTargetRegisterName(LGIRGrammarParser::RegisterNameContext* context)
+    std::string parser::getTargetRegisterName(LGIRGrammarParser::RegisterNameContext* context)
     {
         if (context->IDENTIFIER()) return context->IDENTIFIER()->getText();
         if (context->INT_NUMBER()) return context->INT_NUMBER()->getText();
         throw std::runtime_error("Invalid register name: " + context->getText());
     }
 
-    std::string IRParser::parseAttribute(LGIRGrammarParser::AttributeContext* context)
+    std::string parser::parseAttribute(LGIRGrammarParser::AttributeContext* context)
     {
         std::string s = context->STRING_LITERAL()->getText();
         return s.substr(1, s.size() - 2);
@@ -829,7 +829,7 @@ namespace lg::ir::parser
         LGIRGrammarParser grammarParser(&tokens);
         auto program = grammarParser.program();
         auto* module = new IRModule();
-        IRParser parser(module);
+        parser parser(module);
         parser.visit(program);
         return module;
     }
