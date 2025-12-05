@@ -187,6 +187,9 @@ public:
   virtual void enterTypeCastKind(LGIRGrammarParser::TypeCastKindContext * /*ctx*/) override { }
   virtual void exitTypeCastKind(LGIRGrammarParser::TypeCastKindContext * /*ctx*/) override { }
 
+  virtual void enterAttribute(LGIRGrammarParser::AttributeContext * /*ctx*/) override { }
+  virtual void exitAttribute(LGIRGrammarParser::AttributeContext * /*ctx*/) override { }
+
 
   virtual void enterEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }
   virtual void exitEveryRule(antlr4::ParserRuleContext * /*ctx*/) override { }

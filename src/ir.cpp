@@ -7,20 +7,25 @@ namespace lg::ir
 {
     namespace base
     {
-        IRGlobalVariable::IRGlobalVariable(bool isConstant, std::string name, type::IRType* type,
-                                           value::constant::IRConstant* initializer) : isExtern(false),
+        IRGlobalVariable::IRGlobalVariable(std::vector<std::string> attributes, bool isConstant, std::string name,
+                                           type::IRType* type,
+                                           value::constant::IRConstant* initializer) :
+            attributes(std::move(attributes)), isExtern(false),
             isConstant(isConstant), type(type), name(std::move(name)), initializer(initializer)
         {
         }
 
-        IRGlobalVariable::IRGlobalVariable(bool isConstant, std::string name,
-                                           value::constant::IRConstant* initializer) : isExtern(false),
-            isConstant(isConstant), name(std::move(name)), initializer(initializer), type(initializer->getType())
+        IRGlobalVariable::IRGlobalVariable(std::vector<std::string> attributes, bool isConstant, std::string name,
+                                           value::constant::IRConstant* initializer) :
+            attributes(std::move(attributes)), isExtern(false),
+            isConstant(isConstant), type(initializer->getType()), name(std::move(name)), initializer(initializer)
         {
         }
 
-        IRGlobalVariable::IRGlobalVariable(bool isConstant, std::string name, type::IRType* type) : isExtern(false),
-            isConstant(isConstant), type(type), name(std::move(name))
+        IRGlobalVariable::IRGlobalVariable(std::vector<std::string> attributes, bool isConstant, std::string name,
+                                           type::IRType* type) : attributes(std::move(attributes)), isExtern(false),
+                                                                 isConstant(isConstant), type(type),
+                                                                 name(std::move(name))
         {
         }
 
@@ -1024,8 +1029,8 @@ namespace lg::ir
         std::string IRStackAllocate::toString()
         {
             return "%" + target->name + " = stack_alloc " + type->toString() + (size != nullptr
-                    ? ", " + size->toString()
-                    : "");
+                ? ", " + size->toString()
+                : "");
         }
 
         IRTypeCast::IRTypeCast(Kind kind, value::IRValue* source, type::IRType* targetType, value::IRRegister* target) :

@@ -185,6 +185,9 @@ public:
   virtual void enterTypeCastKind(LGIRGrammarParser::TypeCastKindContext *ctx) = 0;
   virtual void exitTypeCastKind(LGIRGrammarParser::TypeCastKindContext *ctx) = 0;
 
+  virtual void enterAttribute(LGIRGrammarParser::AttributeContext *ctx) = 0;
+  virtual void exitAttribute(LGIRGrammarParser::AttributeContext *ctx) = 0;
+
 
 };
 

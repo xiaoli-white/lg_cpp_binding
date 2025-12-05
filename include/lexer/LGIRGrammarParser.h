@@ -25,8 +25,9 @@ public:
     USHR = 66, ZEXT = 67, SEXT = 68, TRUNC = 69, INTTOF = 70, FTOINT = 71, 
     INTTOPTR = 72, PTRTOINT = 73, PTRTOPTR = 74, FEXT = 75, FTRUNC = 76, 
     BITCAST = 77, FUNCREF = 78, GLOBALREF = 79, LOCALREF = 80, CONSTANT = 81, 
-    LABEL = 82, STRING = 83, ELLIPSIS = 84, MULTIPLY = 85, INT_NUMBER = 86, 
-    DECIMAL_NUMBER = 87, WS = 88, STRING_LITERAL = 89, IDENTIFIER = 90
+    LABEL = 82, STRING = 83, ELLIPSIS = 84, MULTIPLY = 85, ATTRIBUTE = 86, 
+    INT_NUMBER = 87, DECIMAL_NUMBER = 88, WS = 89, STRING_LITERAL = 90, 
+    IDENTIFIER = 91
   };
 
   enum {
@@ -44,7 +45,8 @@ public:
     RuleArrayConstant = 44, RuleStructureInitializer = 45, RuleStringConstant = 46, 
     RuleFunctionReference = 47, RuleGlobalReference = 48, RuleLocalReference = 49, 
     RuleRegister = 50, RuleRegisterName = 51, RuleLabel = 52, RuleCondition = 53, 
-    RuleUnaryOperator = 54, RuleBinaryOperator = 55, RuleTypeCastKind = 56
+    RuleUnaryOperator = 54, RuleBinaryOperator = 55, RuleTypeCastKind = 56, 
+    RuleAttribute = 57
   };
 
   explicit LGIRGrammarParser(antlr4::TokenStream *input);
@@ -120,7 +122,8 @@ public:
   class ConditionContext;
   class UnaryOperatorContext;
   class BinaryOperatorContext;
-  class TypeCastKindContext; 
+  class TypeCastKindContext;
+  class AttributeContext; 
 
   class  ProgramContext : public antlr4::ParserRuleContext {
   public:
@@ -149,6 +152,8 @@ public:
     virtual size_t getRuleIndex() const override;
     antlr4::tree::TerminalNode *GLOBAL();
     antlr4::tree::TerminalNode *IDENTIFIER();
+    std::vector<AttributeContext *> attribute();
+    AttributeContext* attribute(size_t i);
     antlr4::tree::TerminalNode *EXTERN();
     antlr4::tree::TerminalNode *CONST();
     ConstantContext *constant();
@@ -170,6 +175,8 @@ public:
     antlr4::tree::TerminalNode *STRUCTURE();
     antlr4::tree::TerminalNode *IDENTIFIER();
     FieldsContext *fields();
+    std::vector<AttributeContext *> attribute();
+    AttributeContext* attribute(size_t i);
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
@@ -221,6 +228,8 @@ public:
     antlr4::tree::TerminalNode *IDENTIFIER();
     std::vector<LocalVariablesContext *> localVariables();
     LocalVariablesContext* localVariables(size_t i);
+    std::vector<AttributeContext *> attribute();
+    AttributeContext* attribute(size_t i);
     antlr4::tree::TerminalNode *EXTERN();
     std::vector<BasicBlockContext *> basicBlock();
     BasicBlockContext* basicBlock(size_t i);
@@ -1128,6 +1137,22 @@ public:
   };
 
   TypeCastKindContext* typeCastKind();
+
+  class  AttributeContext : public antlr4::ParserRuleContext {
+  public:
+    AttributeContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *ATTRIBUTE();
+    antlr4::tree::TerminalNode *STRING_LITERAL();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+   
+  };
+
+  AttributeContext* attribute();
 
 
   // By default the static state used to implement the parser is lazily initialized during the first

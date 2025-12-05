@@ -133,6 +133,8 @@ public:
 
     virtual std::any visitTypeCastKind(LGIRGrammarParser::TypeCastKindContext *context) = 0;
 
+    virtual std::any visitAttribute(LGIRGrammarParser::AttributeContext *context) = 0;
+
 
 };
 

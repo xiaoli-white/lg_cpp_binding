@@ -86,6 +86,7 @@ namespace lg::ir::parser
         static base::IRCondition parseCondition(LGIRGrammarParser::ConditionContext* context);
         static instruction::IRTypeCast::Kind parseTypeCastKind(LGIRGrammarParser::TypeCastKindContext* context);
         static std::string getTargetRegisterName(LGIRGrammarParser::RegisterNameContext* context);
+        static std::string parseAttribute(LGIRGrammarParser::AttributeContext*  context);
     };
 
     IRModule* parse(const std::string& code);

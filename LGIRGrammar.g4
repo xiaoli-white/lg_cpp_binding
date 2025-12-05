@@ -2,11 +2,11 @@ grammar LGIRGrammar;
 
 program: (globalVariable | structure | function)* EOF;
 
-globalVariable: EXTERN? CONST? GLOBAL IDENTIFIER ('=' constant)? (':' type)?;
-structure: STRUCTURE IDENTIFIER '{' fields '}';
+globalVariable: attribute* EXTERN? CONST? GLOBAL IDENTIFIER ('=' constant)? (':' type)?;
+structure: attribute* STRUCTURE IDENTIFIER '{' fields '}';
 fields: field (',' field)* |;
 field: type IDENTIFIER;
-function: EXTERN? FUNCTION type IDENTIFIER '(' localVariables ')' ('{' localVariables '}' '{' (basicBlock)* '}')?;
+function: attribute* EXTERN? FUNCTION type IDENTIFIER '(' localVariables ')' ('{' localVariables '}' '{' (basicBlock)* '}')?;
 localVariables: localVariable (',' localVariable)* |;
 localVariable: type IDENTIFIER;
 basicBlock: IDENTIFIER ':' (statement)*;
@@ -63,6 +63,8 @@ condition: 'if_true' | 'if_false' | 'e' | 'ne' | 'ne' | 'l' | 'le' | 'g' | 'ge';
 unaryOperator: INC | DEC | NOT | NEG;
 binaryOperator: ADD | SUB | MUL | DIV | MOD | AND | OR | XOR | SHL | SHR | USHR;
 typeCastKind: ZEXT | SEXT | TRUNC | INTTOF | FTOINT | INTTOPTR | PTRTOINT | PTRTOPTR | FEXT | FTRUNC | BITCAST;
+
+attribute: ATTRIBUTE '(' STRING_LITERAL ')';
 
 I1: 'i1';
 I8: 'i8';
@@ -134,6 +136,8 @@ STRING: 'string';
 
 ELLIPSIS: '...';
 MULTIPLY: '*';
+
+ATTRIBUTE: '__attribute__';
 
 INT_NUMBER : [0-9]+;
 DECIMAL_NUMBER: [0-9]+ '.' [0-9]+;

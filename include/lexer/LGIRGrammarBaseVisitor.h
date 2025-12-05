@@ -243,6 +243,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitAttribute(LGIRGrammarParser::AttributeContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
 
 };
 

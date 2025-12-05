@@ -15,20 +15,34 @@ namespace lg::ir::parser
     std::any IRParser::visitProgram(LGIRGrammarParser::ProgramContext* context)
     {
         for (const auto& structure : context->structure())
-            module->putStructure(new structure::IRStructure({}, structure->IDENTIFIER()->getText(), {}));
+        {
+            std::vector<std::string> attributes;
+            for (const auto& attribute : structure->attribute())
+            {
+                attributes.emplace_back(parseAttribute(attribute));
+            }
+            module->putStructure(new structure::IRStructure(std::move(attributes), structure->IDENTIFIER()->getText(), {}));
+        }
         for (const auto& globalVariable : context->globalVariable())
         {
+            std::vector<std::string> attributes;
+            for (const auto& attribute : globalVariable->attribute())
+            {
+                attributes.emplace_back(parseAttribute(attribute));
+            }
             if (globalVariable->EXTERN())
             {
                 visit(globalVariable->type());
                 auto* type = std::any_cast<type::IRType*>(stack.top());
                 stack.pop();
-                module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->CONST() != nullptr,
+                module->putGlobalVariable(new base::IRGlobalVariable(std::move(attributes),
+                                                                     globalVariable->CONST() != nullptr,
                                                                      globalVariable->IDENTIFIER()->getText(), type));
             }
             else
             {
-                module->putGlobalVariable(new base::IRGlobalVariable(globalVariable->CONST() != nullptr,
+                module->putGlobalVariable(new base::IRGlobalVariable(std::move(attributes),
+                                                                     globalVariable->CONST() != nullptr,
                                                                      globalVariable->IDENTIFIER()->getText(),
                                                                      static_cast<value::constant::IRConstant*>(
                                                                          nullptr)));
@@ -36,6 +50,11 @@ namespace lg::ir::parser
         }
         for (const auto& func : context->function())
         {
+            std::vector<std::string> attributes;
+            for (const auto& attribute : func->attribute())
+            {
+                attributes.emplace_back(parseAttribute(attribute));
+            }
             visit(func->type());
             auto* returnType = std::any_cast<type::IRType*>(stack.top());
             stack.pop();
@@ -45,15 +64,16 @@ namespace lg::ir::parser
             function::IRFunction* function;
             if (func->EXTERN())
             {
-                function = new function::IRFunction({}, returnType, func->IDENTIFIER()->getText(), args);
+                function = new function::IRFunction(std::move(attributes), returnType, func->IDENTIFIER()->getText(),
+                                                    args);
             }
             else
             {
                 visit(func->localVariables(1));
                 const auto locals = std::any_cast<std::vector<function::IRLocalVariable*>>(stack.top());
                 stack.pop();
-                function = new function::IRFunction({}, returnType, func->IDENTIFIER()->getText(), args, locals,
-                                                    new base::IRControlFlowGraph());
+                function = new function::IRFunction(std::move(attributes), returnType, func->IDENTIFIER()->getText(),
+                                                    args, locals, new base::IRControlFlowGraph());
             }
             module->putFunction(function);
         }
@@ -776,6 +796,11 @@ namespace lg::ir::parser
         throw std::runtime_error("Invalid register name: " + context->getText());
     }
 
+    std::string IRParser::parseAttribute(LGIRGrammarParser::AttributeContext* context)
+    {
+        std::string s = context->STRING_LITERAL()->getText();
+        return s.substr(1, s.size() - 2);
+    }
 
     IRModule* parse(const std::string& code)
     {

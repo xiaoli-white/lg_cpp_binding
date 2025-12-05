@@ -109,15 +109,16 @@ namespace lg::ir
         class IRGlobalVariable final : public IRNode
         {
         public:
+            std::vector<std::string> attributes;
             bool isExtern;
             bool isConstant;
             type::IRType* type;
             std::string name;
             value::constant::IRConstant* initializer = nullptr;
-            IRGlobalVariable(bool isConstant, std::string name, type::IRType* type,
+            IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, type::IRType* type,
                              value::constant::IRConstant* initializer);
-            IRGlobalVariable(bool isConstant, std::string name, value::constant::IRConstant* initializer);
-            IRGlobalVariable(bool isConstant, std::string name, type::IRType* type);
+            IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, value::constant::IRConstant* initializer);
+            IRGlobalVariable(std::vector<std::string> attributes,bool isConstant, std::string name, type::IRType* type);
             std::any accept(IRVisitor* visitor, std::any additional) override;
             std::string toString() override;
             void setInitializer(value::constant::IRConstant* initializer);
